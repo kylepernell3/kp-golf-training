@@ -565,16 +565,18 @@ function Hero() {
           </div>
 
           {/* Metrics */}
-          <div style={{display:'flex',gap:clamp(36,52),flexWrap:'wrap',rowGap:28}}>
-            {[
-              ['$39.99','Starting price'],
-              ['2','Elite courses'],
-              ['1-on-1','Every session'],
-            ].map(([v,l])=>(
+          <div style={{display:'flex',gap:44,flexWrap:'wrap',rowGap:28}}>
+            {([
+              {v:'$39.99', l:'Starting price',   sm:false},
+              {v:'2',      l:'Elite courses',     sm:false},
+              {v:'Tailored', l:'To Your Swing',   sm:true },
+            ] as {v:string;l:string;sm:boolean}[]).map(({v,l,sm})=>(
               <div key={l}>
                 <div style={{
                   fontFamily:"'Cormorant Garamond',serif",
-                  fontSize:'clamp(34px,4.5vw,46px)',fontWeight:300,color:'#d8b05a',lineHeight:1,
+                  fontSize:sm?'clamp(26px,3.5vw,36px)':'clamp(34px,4.5vw,46px)',
+                  fontWeight:300,color:'#d8b05a',lineHeight:1,
+                  fontStyle:sm?'italic':'normal',
                 }}>{v}</div>
                 <div style={{
                   fontFamily:"'JetBrains Mono',monospace",fontSize:9,
@@ -597,7 +599,7 @@ function Hero() {
   )
 }
 
-function clamp(min:number,max:number){ return Math.max(min,Math.min(max,min+(max-min)*.5)) }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARQUEES
@@ -848,9 +850,8 @@ function ImageSlider() {
           </div>
 
           {/* Nav arrows */}
-          {([[-1,'left','←','']] as [1|-1,string,string,string][])
-            .concat([[1,'right','→','']]).map(([d,s,a,lbl])=>(
-            <button key={s} onClick={()=>go(d as 1|-1)} aria-label={d===-1?'Previous image':'Next image'} style={{
+          {([[-1,'left','←'],[1,'right','→']] as [1|-1,string,string][]).map(([d,s,a])=>(
+            <button key={s} onClick={()=>go(d)} aria-label={d===-1?'Previous image':'Next image'} style={{
               position:'absolute',top:'50%',transform:'translateY(-50%)',
               [s]:16,width:44,height:44,background:'rgba(7,15,10,.72)',
               border:'1px solid var(--bd)',color:'var(--t1)',cursor:'pointer',fontSize:18,
