@@ -1,9 +1,9 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const params = useSearchParams()
   const sessionId = params.get('session_id')
   const [status, setStatus] = useState<'loading'|'success'|'error'>('loading')
@@ -44,46 +44,50 @@ export default function SuccessPage() {
             background: 'linear-gradient(135deg, #f59e0b, #fcd34d, #f59e0b)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>Booking Confirmed!</h1>
-          <p style={{ fontSize: '1.1rem', opacity: 0.8, maxWidth: '500px', margin: '0 auto 2rem' }}>
-            Thank you for booking with KP Golf Training. Kyle will be in touch within 24 hours to confirm your session time.
-          </p>
-          <p style={{ fontSize: '0.9rem', opacity: 0.5, marginBottom: '2rem' }}>
-            Session ID: {sessionId?.slice(0, 20)}...
+          }}>You're Booked!</h1>
+          <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem', maxWidth: '480px' }}>
+            Your lesson is confirmed. Check your email for details. See you on the range!
           </p>
           <Link href="/" style={{
             display: 'inline-block',
-            padding: '0.875rem 2rem',
-            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            padding: '12px 28px',
+            background: '#c5983e',
             color: '#070f0a',
-            fontWeight: 700,
-            borderRadius: '0.5rem',
             textDecoration: 'none',
-            fontSize: '1rem',
-          }}>
-            Back to Home
-          </Link>
+            fontWeight: 600,
+            letterSpacing: '.1em',
+            textTransform: 'uppercase',
+            fontSize: '12px',
+          }}>Back to Home</Link>
         </div>
       )}
       {status === 'error' && (
         <div>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem' }}>Something went wrong</h1>
-          <p style={{ opacity: 0.7, marginBottom: '2rem' }}>We couldn&apos;t confirm your booking. Please contact Kyle directly.</p>
+          <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Something went wrong</h1>
+          <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Please contact us to confirm your booking.</p>
           <Link href="/" style={{
             display: 'inline-block',
-            padding: '0.875rem 2rem',
-            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            padding: '12px 28px',
+            background: '#c5983e',
             color: '#070f0a',
-            fontWeight: 700,
-            borderRadius: '0.5rem',
             textDecoration: 'none',
-          }}>
-            Back to Home
-          </Link>
+            fontWeight: 600,
+          }}>Go Back</Link>
         </div>
       )}
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#070f0a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ede8dc' }}>
+        <div style={{ fontSize: '3rem' }}>⛳</div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   )
 }
