@@ -11,7 +11,7 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { items, customerEmail, customerName, promoCode } = body;
+    const { items, customerEmail, customerName, promoCode, bookedDate, bookedTime } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
         promoCode: promoCode || '',
         discount: String(discount),
         total: String(total),
+        bookedDate: bookedDate || '',
+        bookedTime: bookedTime || '',
       },
     });
 
@@ -63,6 +65,8 @@ export async function POST(req: NextRequest) {
       stripe_session_id: session.id,
       status: 'pending',
       promo_code: promoCode || null,
+      booked_date: bookedDate || null,
+      booked_time: bookedTime || null,
     });
 
     return NextResponse.json({ url: session.url });
