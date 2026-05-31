@@ -3,6 +3,25 @@
 import React, {
   useState, useEffect, useRef, useCallback, useMemo,
 } from 'react'
+import { createClient } from '@supabase/supabase-js'
+
+const supabasePublic = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AVAILABILITY HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+const ALL_TIMES = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM']
+
+function getPreBlockedSlots(dateStr: string): string[] {
+  let seed = dateStr.split('').reduce((a,c)=>a+c.charCodeAt(0),0)
+  const rng = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed-1)/2147483646 }
+  const count = 2 + Math.floor(rng() * 3)
+  const shuffled = [...ALL_TIMES].sort(() => rng() - 0.5)
+  return shuffled.slice(0, count)
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GLOBAL CSS
@@ -46,6 +65,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',system-ui,sans-s
   70%{transform:scale(1.25);opacity:0}
   100%{transform:scale(0.9);opacity:0}
 }
+@keyframes kpSpin {from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 .af{animation:kpFall var(--fd,7s) var(--fdy,0s) linear infinite}
 .aml{animation:kpML var(--ms,30s) linear infinite;display:flex}
@@ -115,7 +135,6 @@ interface Lesson {
 }
 interface CartItem { lesson:Lesson; quantity:number; date?:string; time?:string }
 interface BForm { name:string; email:string; phone:string; message:string }
-interface TSlot { time:string; available:boolean }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
@@ -150,31 +169,39 @@ const IMGS = [
 ]
 
 const ICAPS = [
-  'Pine Valley Golf Club','Tavistock Club','On the Range','Short Game Practice',
-  'Tee Box Setup','Putting Green','Approach Shots','Drive Analysis',
-  'Iron Play','Bunker Work','Course Walk',
+  '18th Overlook',
+  '5th Teeshot',
+  '3rd Tee Shot',
+  '15th in Fall',
+  'Putting Green',
+  '8th Double Green',
+  '18th Teeshot',
+  '9th Approach',
+  '16th Green',
+  'Golden State Warriors Championship Rings',
+  '14th Teeshot',
 ]
 
 const LESSONS: Lesson[] = [
-  { id:'l30',title:'30-Min Lesson',duration:'30 minutes',price:{min:35,max:40},type:'single',
+  { id:'l30',title:'30-Min Lesson',duration:'30 minutes',price:{min:39.99,max:44.99},type:'single',
     description:'Laser-focused on one aspect of your game. Perfect for a quick tune-up.',
     details:['1-on-1 instruction','Video feedback','One drill to take home'] },
-  { id:'l45',title:'45-Min Lesson',duration:'45 minutes',price:{min:45,max:55},type:'single',popular:true,
+  { id:'l45',title:'45-Min Lesson',duration:'45 minutes',price:{min:49.99,max:59.99},type:'single',popular:true,
     description:'Our most booked session. Enough time to diagnose, fix, and ingrain a real change.',
     details:['1-on-1 instruction','Video swing analysis','2 practice drills','Personalized feedback'] },
-  { id:'l60',title:'60-Min Lesson',duration:'60 minutes',price:{min:55,max:65},type:'single',
+  { id:'l60',title:'60-Min Lesson',duration:'60 minutes',price:{min:59.99,max:69.99},type:'single',
     description:'A deep dive into your full swing, short game, or on-course decision making.',
     details:['1-on-1 instruction','Full video analysis','Multi-area coverage','Written practice plan'] },
-  { id:'l90',title:'90-Min Lesson',duration:'90 minutes',price:{min:80,max:95},type:'single',
+  { id:'l90',title:'90-Min Lesson',duration:'90 minutes',price:{min:84.99,max:99.99},type:'single',
     description:'The complete assessment — full game from tee to green. Where real transformation starts.',
     details:['1-on-1 instruction','Complete swing analysis','Short game work','Full practice plan','On-course tips'] },
-  { id:'pk3',title:'3×45 Starter Pack',duration:'3 sessions · 45 min each',price:{min:135,max:150},type:'pack',sessions:3,promoEligible:true,
+  { id:'pk3',title:'3×45 Starter Pack',duration:'3 sessions · 45 min each',price:{min:139.99,max:154.99},type:'pack',sessions:3,promoEligible:true,
     description:'Three focused sessions to build real momentum and see results on the course.',
     details:['3 × 45-min sessions','Progress tracking','Custom drill library','Between-session tips'] },
-  { id:'pk5',title:'5×60 Break-90 Pack',duration:'5 sessions · 60 min each',price:{min:260,max:300},type:'pack',sessions:5,bestValue:true,promoEligible:true,
+  { id:'pk5',title:'5×60 Break-90 Pack',duration:'5 sessions · 60 min each',price:{min:264.99,max:304.99},type:'pack',sessions:5,bestValue:true,promoEligible:true,
     description:'Built for golfers serious about breaking 90. A full game transformation over 5 sessions.',
     details:['5 × 60-min sessions','Full swing overhaul','Short game focus','Course management','Handicap goal plan'] },
-  { id:'pkj',title:'4×45 Junior Pack',duration:'4 sessions · 45 min each',price:{min:160,max:180},type:'pack',sessions:4,promoEligible:true,
+  { id:'pkj',title:'4×45 Junior Pack',duration:'4 sessions · 45 min each',price:{min:164.99,max:184.99},type:'pack',sessions:4,promoEligible:true,
     description:'For young golfers ages 6–17. Fun, patient, built for long-term athletic development.',
     details:['4 × 45-min sessions','Age-appropriate drills','Fun fundamentals','Parent updates after each session'] },
 ]
@@ -183,14 +210,6 @@ const MARQUEE_W = [
   'Fix Your Slice','Gain Distance','Pure Your Irons','Beginner Friendly',
   'Affordable Rates','Flexible Scheduling','Real Experience','South Jersey Golf',
   'No Judgment Zone','Lower Your Handicap','Short Game Mastery','Caddied at Pine Valley',
-]
-
-const TIMES: TSlot[] = [
-  {time:'8:00 AM',available:true},{time:'9:00 AM',available:true},
-  {time:'10:00 AM',available:false},{time:'11:00 AM',available:true},
-  {time:'12:00 PM',available:false},{time:'1:00 PM',available:true},
-  {time:'2:00 PM',available:true},{time:'3:00 PM',available:false},
-  {time:'4:00 PM',available:true},{time:'5:00 PM',available:true},
 ]
 
 function getDates(): Date[] {
@@ -233,8 +252,7 @@ const PROMO='FOUNDING', PROMO_PCT=0.2, SPOTS=9
 // HOOKS
 // ─────────────────────────────────────────────────────────────────────────────
 function useInView(opts?:{threshold?:number;once?:boolean}) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ref=useRef<any>(null)
+  const ref=useRef<HTMLDivElement>(null)
   const [inView,setInView]=useState(false)
   useEffect(()=>{
     const el=ref.current;if(!el)return
@@ -248,10 +266,10 @@ function useInView(opts?:{threshold?:number;once?:boolean}) {
 }
 
 function useAutoplay(threshold=0.5) {
-  const ref=useRef<HTMLVideoElement|null>(null)
+  const ref=useRef<HTMLVideoElement>(null)
   const [playing,setPlaying]=useState(false)
   useEffect(()=>{
-    const v=ref.current;if(!v)return
+    const v=ref.current as HTMLVideoElement;if(!v)return
     const obs=new IntersectionObserver(([e])=>{
       if(e.isIntersecting){v.play().then(()=>setPlaying(true)).catch(()=>{})}
       else{v.pause();setPlaying(false)}
@@ -389,7 +407,7 @@ function FallingBg() {
   const items=useMemo(()=>{
     let s=42;const r=()=>{s=(s*16807)%2147483647;return(s-1)/2147483646}
     return Array.from({length:38},(_,i)=>({
-      id:i,type:(['ball','flag','club'] as const)[Math.floor(r()*3)],
+      id:i,type:(['ball','flag'] as const)[Math.floor(r()*2)],
       left:r()*100,dur:5+r()*9,delay:r()*13,rotate:150+r()*400,
       size:14+r()*22,opacity:.12+r()*0.22,
     }))
@@ -408,23 +426,24 @@ function FallingBg() {
           ['--fr' as string]:`${el.rotate}deg`,
         }}>
           {el.type==='ball'&&(
-            <svg width={el.size} height={el.size} viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="#c5983e" strokeWidth="1.5" fill="rgba(197,152,62,.07)"/>
-              <path d="M12 2 Q8 8 8 12 Q8 16 12 22" stroke="#c5983e" strokeWidth=".7" fill="none" opacity=".5"/>
-              <path d="M12 2 Q16 8 16 12 Q16 16 12 22" stroke="#c5983e" strokeWidth=".7" fill="none" opacity=".5"/>
-              <path d="M2 12 Q8 9 12 9 Q16 9 22 12" stroke="#c5983e" strokeWidth=".7" fill="none" opacity=".5"/>
+            <svg viewBox="0 0 32 32" width={el.size} height={el.size} style={{opacity:el.opacity}}>
+              <circle cx="16" cy="16" r="14" fill="white" stroke="#ddd" strokeWidth="0.5"/>
+              <circle cx="11" cy="11" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="16" cy="9" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="21" cy="11" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="9" cy="16" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="14" cy="15" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="19" cy="15" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="23" cy="16" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="11" cy="21" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="16" cy="23" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="21" cy="21" r="1.5" fill="#ccc" opacity="0.6"/>
             </svg>
           )}
           {el.type==='flag'&&(
             <svg width={el.size*.55} height={el.size*1.55} viewBox="0 0 14 36" fill="none">
               <line x1="3" y1="0" x2="3" y2="36" stroke="#c5983e" strokeWidth="1.4"/>
               <polygon points="3,0 14,7 3,14" fill="#c5983e" opacity=".8"/>
-            </svg>
-          )}
-          {el.type==='club'&&(
-            <svg width={el.size*.45} height={el.size*2.1} viewBox="0 0 10 46" fill="none">
-              <line x1="5" y1="0" x2="5" y2="38" stroke="#c5983e" strokeWidth="1.2"/>
-              <rect x="0" y="38" width="10" height="7" rx="1" fill="#c5983e" opacity=".8"/>
             </svg>
           )}
         </div>
@@ -443,7 +462,7 @@ function Hero() {
       position:'relative',minHeight:'100svh',overflow:'hidden',
       display:'flex',alignItems:'center',background:'var(--bg)',
     }}>
-      <video autoPlay muted loop playsInline src={VIDEOS[0]} style={{
+      <video autoPlay muted loop playsInline src={`${CDN}6a1af357d53fc25488c3385d.mov`} style={{
         position:'absolute',inset:0,width:'100%',height:'100%',
         objectFit:'cover',opacity:.16,zIndex:0,
       }}/>
@@ -457,7 +476,7 @@ function Hero() {
         <div style={{maxWidth:780}}>
           <div className="lbl" style={{marginBottom:28,display:'flex',alignItems:'center',gap:16}}>
             <span style={{width:36,height:1,background:'#c5983e',display:'inline-block'}}/>
-            South Jersey Golf Lessons — Starting at $35
+            South Jersey Golf Lessons — Starting at $39.99
           </div>
           <h1 style={{
             fontFamily:"'Cormorant Garamond',serif",
@@ -477,7 +496,7 @@ function Hero() {
             <button onClick={()=>go('#videos')} className="btn-w">Watch Swing Videos ↓</button>
           </div>
           <div style={{display:'flex',gap:52,flexWrap:'wrap'}}>
-            {[['$35','Starting price'],['2','Elite courses caddied'],['5★','Client reviews']].map(([v,l])=>(
+            {[['$39.99','Starting price'],['2','Elite courses caddied'],['5★','Client reviews']].map(([v,l])=>(
               <div key={l}>
                 <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:44,fontWeight:300,color:'#d8b05a',lineHeight:1}}>{v}</div>
                 <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.16em',textTransform:'uppercase',color:'#506056',marginTop:5}}>{l}</div>
@@ -572,10 +591,10 @@ function WhyKP() {
 // ─────────────────────────────────────────────────────────────────────────────
 // VIDEO SLIDER
 // ─────────────────────────────────────────────────────────────────────────────
-function VSlide({src,idx}:{src:string;idx:number}) {
+function VSlide({src,idx,slideW}:{src:string;idx:number;slideW:string}) {
   const {ref,playing}=useAutoplay(.5)
   return (
-    <div style={{flexShrink:0,width:'clamp(260px,68vw,500px)',aspectRatio:'9/16',
+    <div style={{flexShrink:0,width:slideW,aspectRatio:'9/16',
       position:'relative',overflow:'hidden',background:'var(--bgc)',border:'1px solid var(--bd)',
       scrollSnapAlign:'center'}}>
       <video ref={ref} src={src} muted loop playsInline style={{width:'100%',height:'100%',objectFit:'cover'}}/>
@@ -601,6 +620,17 @@ function VideoSlider() {
   const scRef=useRef<HTMLDivElement|null>(null)
   const [act,setAct]=useState(0)
   const {ref,inView}=useInView({threshold:.2})
+  const [isMobile,setIsMobile]=useState(false)
+
+  useEffect(()=>{
+    const check=()=>setIsMobile(window.innerWidth<768)
+    check()
+    window.addEventListener('resize',check)
+    return()=>window.removeEventListener('resize',check)
+  },[])
+
+  const slideW=isMobile?'90vw':'72vw'
+
   const go=(i:number)=>{
     const s=scRef.current?.children[i] as HTMLElement
     s?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})
@@ -618,12 +648,19 @@ function VideoSlider() {
           </div>
         </div>
       </div>
-      <div ref={scRef} className="ns" style={{
-        display:'flex',gap:18,overflowX:'auto',scrollSnapType:'x mandatory',
-        padding:'0 clamp(20px,4vw,40px)',
-        opacity:inView?1:0,transition:'opacity .9s ease',
-      }}>
-        {VIDEOS.map((src,i)=><VSlide key={i} src={src} idx={i}/>)}
+      <div style={{position:'relative'}}>
+        <div ref={scRef} className="ns" style={{
+          display:'flex',gap:18,overflowX:'auto',scrollSnapType:'x mandatory',
+          padding:'0 clamp(20px,4vw,40px)',
+          opacity:inView?1:0,transition:'opacity .9s ease',
+        }}>
+          {VIDEOS.map((src,i)=><VSlide key={i} src={src} idx={i} slideW={slideW}/>)}
+        </div>
+        {/* Left/right gradient fade */}
+        <div style={{
+          position:'absolute',inset:0,pointerEvents:'none',zIndex:2,
+          background:'linear-gradient(to right, #070f0a 0%, transparent 10%, transparent 90%, #070f0a 100%)',
+        }}/>
       </div>
       <div style={{display:'flex',gap:8,justifyContent:'center',marginTop:32}}>
         {VIDEOS.map((_,i)=>(
@@ -810,7 +847,7 @@ function HowItWorks() {
             Ready to start?
           </h3>
           <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',marginBottom:36}}>
-            First lesson starts at $35. No experience needed.
+            First lesson starts at $39.99. No experience needed.
           </p>
           <button onClick={()=>document.querySelector('#book')?.scrollIntoView({behavior:'smooth'})} className="btn-g">
             Book Your First Lesson
@@ -837,10 +874,44 @@ function Booking() {
   const [fErr,setFErr]=useState('')
   const [done,setDone]=useState(false)
   const [dates,setDates]=useState<Date[]>([])
+  const [bookedSlots,setBookedSlots]=useState<string[]>([])
+  const [loadingSlots,setLoadingSlots]=useState(false)
 
   useEffect(()=>{setDates(getDates())},[])
 
   const fmtD=(d:Date)=>d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})
+
+  async function fetchAvailability(dateStr: string) {
+    setLoadingSlots(true)
+    try {
+      const { data } = await supabasePublic
+        .from('bookings')
+        .select('items')
+        .eq('status', 'confirmed')
+      const taken: string[] = []
+      data?.forEach(row => {
+        const items = row.items as Array<{date?:string;time?:string}>
+        items?.forEach(item => { if(item.date===dateStr && item.time) taken.push(item.time) })
+      })
+      if(taken.length >= 5) {
+        setBookedSlots([...ALL_TIMES])
+      } else {
+        const preBlocked = getPreBlockedSlots(dateStr)
+        setBookedSlots([...new Set([...taken, ...preBlocked])])
+      }
+    } finally {
+      setLoadingSlots(false)
+    }
+  }
+
+  useEffect(()=>{
+    if(!selDate)return
+    const dateStr=fmtD(selDate)
+    fetchAvailability(dateStr)
+    setSelTime(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[selDate])
+
   const canAdd=sel&&(later||(selDate&&selTime))
 
   const addItem=()=>{
@@ -873,10 +944,8 @@ function Booking() {
     setFErr('')
 
     // TODO: Supabase — insert booking before checkout
-    // import { createClient } from '@supabase/supabase-js'
-    // const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    // await sb.from('bookings').insert({
-    //   cart: JSON.stringify(cart), contact: JSON.stringify(form),
+    // await supabasePublic.from('bookings').insert({
+    //   items: JSON.stringify(cart), contact: JSON.stringify(form),
     //   total, promo: piApplied, status: 'pending', created_at: new Date().toISOString()
     // })
 
@@ -887,7 +956,7 @@ function Booking() {
     //   body: JSON.stringify({ cart, total, email: form.email, name: form.name })
     // })
     // const { url } = await res.json()
-    // window.location.href = url   ← Stripe-hosted checkout page
+    // window.location.href = url
 
     alert(`Booking received! We'll reach out to ${form.email} to confirm.\n\n[Stripe + Supabase integration pending — see TODO comments in source]`)
     setDone(true)
@@ -969,7 +1038,7 @@ function Booking() {
                       {dates.map((date,i)=>{
                         const s=selDate?.toDateString()===date.toDateString()
                         return (
-                          <button key={i} onClick={()=>{setSelDate(date);setSelTime(null)}} style={{
+                          <button key={i} onClick={()=>{setSelDate(date)}} style={{
                             flexShrink:0,padding:'10px 12px',textAlign:'center',cursor:'pointer',
                             background:s?'var(--o5)':'var(--bgc)',
                             border:`1px solid ${s?'var(--o5)':'var(--bd)'}`,
@@ -986,21 +1055,36 @@ function Booking() {
                         )
                       })}
                     </div>
-                    {selDate&&(
+
+                    {selDate&&loadingSlots&&(
+                      <div style={{display:'flex',justifyContent:'center',padding:20}}>
+                        <div style={{
+                          width:20,height:20,borderRadius:'50%',
+                          border:'2px solid var(--bd)',
+                          borderTopColor:'var(--o5)',
+                          animation:'kpSpin .7s linear infinite',
+                        }}/>
+                      </div>
+                    )}
+
+                    {selDate&&!loadingSlots&&(
                       <>
                         <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:12}}>Select Time</div>
                         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(96px,1fr))',gap:8,marginBottom:24}}>
-                          {TIMES.map(slot=>{
-                            const s=selTime===slot.time
+                          {ALL_TIMES.map(time=>{
+                            const isBooked=bookedSlots.includes(time)
+                            const isSelected=selTime===time
                             return (
-                              <button key={slot.time} disabled={!slot.available} onClick={()=>setSelTime(slot.time)} style={{
+                              <button key={time} disabled={isBooked} onClick={()=>setSelTime(time)} style={{
                                 padding:'10px 6px',fontFamily:"'JetBrains Mono',monospace",fontSize:11,
-                                background:s?'var(--o5)':!slot.available?'rgba(0,0,0,.15)':'var(--bgc)',
-                                border:`1px solid ${s?'var(--o5)':'var(--bd)'}`,
-                                color:s?'var(--bg)':'var(--t1)',
-                                cursor:slot.available?'pointer':'not-allowed',
-                                opacity:slot.available?1:.38,transition:'all .2s',
-                              }}>{slot.available?slot.time:'—'}</button>
+                                background:isSelected?'var(--o5)':isBooked?'rgba(0,0,0,.15)':'rgba(61,138,82,.1)',
+                                border:`1px solid ${isSelected?'var(--o5)':isBooked?'var(--bd)':'rgba(61,138,82,.28)'}`,
+                                color:isSelected?'var(--bg)':isBooked?'var(--t3)':'var(--t1)',
+                                cursor:isBooked?'not-allowed':'pointer',
+                                opacity:isBooked?.45:1,
+                                textDecoration:isBooked?'line-through':'none',
+                                transition:'all .2s',
+                              }}>{time}</button>
                             )
                           })}
                         </div>
@@ -1055,7 +1139,7 @@ function Booking() {
                         <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14}}>{item.quantity}</span>
                       </div>
                       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:300,color:'var(--t1)'}}>
-                        ${item.lesson.price.min*item.quantity}
+                        ${(item.lesson.price.min*item.quantity).toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -1083,9 +1167,9 @@ function Booking() {
                 {/* Totals */}
                 <div style={{marginTop:16,padding:20,background:'var(--bgc)',border:'1px solid var(--bd)'}}>
                   {[
-                    ['Subtotal',`$${sub}`,false],
-                    ...(disc>0?[[`Founding Discount (20%)`,`-$${disc.toFixed(0)}`,true]]:[] as [string,string,boolean][]),
-                    ['Total',`$${total.toFixed(0)}`,false],
+                    ['Subtotal',`$${sub.toFixed(2)}`,false],
+                    ...(disc>0?[[`Founding Discount (20%)`,`-$${disc.toFixed(2)}`,true]]:[] as [string,string,boolean][]),
+                    ['Total',`$${total.toFixed(2)}`,false],
                   ].map(([lbl,val,isDisc],i,arr)=>(
                     <div key={String(lbl)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',
                       padding:i===arr.length-1?'16px 0 0':'8px 0',
@@ -1130,7 +1214,7 @@ function Booking() {
                   </div>
                   {fErr&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'#e05555',marginTop:12}}>{fErr}</div>}
                   <button onClick={checkout} className="btn-g" style={{width:'100%',justifyContent:'center',marginTop:20,padding:'16px 24px'}}>
-                    Confirm &amp; Pay ${total.toFixed(0)} →
+                    Confirm &amp; Pay ${total.toFixed(2)} →
                   </button>
                   <div className="lbl" style={{fontSize:9,color:'var(--t3)',textAlign:'center',marginTop:12,letterSpacing:'.12em'}}>
                     Secure checkout via Stripe
@@ -1235,24 +1319,9 @@ function Footer() {
             </div>
           </div>
           <div>
-            <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:20}}>Lessons</div>
-            <div style={{display:'flex',flexDirection:'column',gap:12}}>
-              {LESSONS.map(l=>(
-                <div key={l.id} style={{display:'flex',justifyContent:'space-between',gap:16}}>
-                  <button onClick={()=>go('#book')} style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,
-                    color:'var(--t2)',background:'none',border:'none',cursor:'pointer',padding:0,
-                    textAlign:'left',transition:'color .2s'}}
-                    onMouseEnter={e=>(e.currentTarget.style.color='var(--t1)')}
-                    onMouseLeave={e=>(e.currentTarget.style.color='var(--t2)')}>{l.title}</button>
-                  <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:'var(--o7)',flexShrink:0}}>${l.price.min}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
             <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:20}}>Contact</div>
             <div style={{display:'flex',flexDirection:'column',gap:18}}>
-              {[{lbl:'Email',val:'kpgolftraining@gmail.com'},{lbl:'Area',val:'South Jersey, NJ'},{lbl:'Availability',val:'Tue–Sun · 8am–6pm'}].map(c=>(
+              {[{lbl:'Email',val:'kpgolftraining@gmail.com'},{lbl:'Area',val:'South Jersey, NJ'}].map(c=>(
                 <div key={c.lbl}>
                   <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:4}}>{c.lbl}</div>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>{c.val}</div>
@@ -1285,7 +1354,6 @@ export default function Page() {
 
   useEffect(()=>{ setMounted(true) },[])
 
-  // Prevent SSR/hydration mismatch by deferring full render to client
   if(!mounted) return (
     <div style={{background:'#070f0a',minHeight:'100vh'}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
