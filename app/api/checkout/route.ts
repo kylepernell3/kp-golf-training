@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-04-10' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -17,19 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
     }
 
-    // Calculate total
     let subtotal = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
     let discount = 0;
 
-    // Apply promo code
     if (promoCode === 'FOUNDING20') {
       discount = Math.round(subtotal * 0.20);
     }
 
     const total = subtotal - discount;
 
-    // Build line items for Stripe
-    const lineItems = items.map((item: any) => ({
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item: any) => ({
       price_data: {
         currency: 'usd',
         product_data: {
@@ -41,18 +38,6 @@ export async function POST(req: NextRequest) {
       quantity: item.quantity,
     }));
 
-    // Add discount line item if applicable
-    if (discount > 0) {
-      lineItems.push({
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'Founding Member Discount (20% off)' },
-          unit_amount: -discount * 100,
-        },
-        quantity: 1,
-      });
-    }
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
@@ -63,11 +48,11 @@ export async function POST(req: NextRequest) {
       metadata: {
         customerName,
         promoCode: promoCode || '',
-        items: JSON.stringify(items),
+        discount: String(discount),
+        total: String(total),
       },
     });
 
-    // Save booking to Supabase
     await supabase.from('bookings').insert({
       customer_name: customerName,
       customer_email: customerEmail,
