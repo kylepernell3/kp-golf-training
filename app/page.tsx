@@ -15,12 +15,30 @@ const supabasePublic = createClient(
 // ─────────────────────────────────────────────────────────────────────────────
 const ALL_TIMES = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM']
 
-function getPreBlockedSlots(dateStr: string): string[] {
-  let seed = dateStr.split('').reduce((a,c)=>a+c.charCodeAt(0),0)
-  const rng = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed-1)/2147483646 }
-  const count = 2 + Math.floor(rng() * 3)
-  const shuffled = [...ALL_TIMES].sort(() => rng() - 0.5)
-  return shuffled.slice(0, count)
+// Real Supabase availability hook — replaces fake getPreBlockedSlots
+function useBookedSlots(dateStr: string | null) {
+  const [bookedSlots, setBookedSlots] = useState<string[]>([])
+  const [slotsLoading, setSlotsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!dateStr) { setBookedSlots([]); return }
+    let cancelled = false
+    setSlotsLoading(true)
+    supabasePublic
+      .from('bookings')
+      .select('booked_time')
+      .eq('booked_date', dateStr)
+      .in('status', ['pending', 'confirmed'])
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) { console.error('Availability fetch error:', error); setBookedSlots([]); }
+        else { setBookedSlots((data ?? []).map((r: any) => r.booked_time).filter(Boolean)) }
+        setSlotsLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [dateStr])
+
+  return { bookedSlots, slotsLoading }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1091,26 +1109,25 @@ function Booking() {
 
   const fmtD=(d:Date)=>d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})
 
-  async function fetchAvailability(dateStr:string) {
+  async function fetchAvailability(dateStr: string) {
     setLoadingSlots(true)
     try {
-      const {data}=await supabasePublic
-        .from('bookings').select('items').eq('status','confirmed')
-      const taken:string[]=[]
-      data?.forEach(row=>{
-        const items=row.items as Array<{date?:string;time?:string}>
-        items?.forEach(item=>{if(item.date===dateStr&&item.time)taken.push(item.time)})
-      })
-      if(taken.length>=5){
-        setBookedSlots([...ALL_TIMES])
-      } else {
-        const preBlocked=getPreBlockedSlots(dateStr)
-        setBookedSlots([...new Set([...taken,...preBlocked])])
-      }
+      const { data, error } = await supabasePublic
+        .from('bookings')
+        .select('booked_time')
+        .eq('booked_date', dateStr)
+        .in('status', ['pending', 'confirmed'])
+      if (error) throw error
+      const taken = (data ?? []).map((r: any) => r.booked_time).filter(Boolean)
+      setBookedSlots(taken)
+    } catch (err) {
+      console.error('fetchAvailability error:', err)
+      setBookedSlots([])
     } finally {
       setLoadingSlots(false)
     }
   }
+
 
   useEffect(()=>{
     if(!selDate)return
@@ -1153,24 +1170,32 @@ function Booking() {
     if(!form.name||!form.email){setFErr('Name and email are required.');return}
     setFErr('')
 
-    // TODO: Supabase — insert booking before checkout
-    // await supabasePublic.from('bookings').insert({
-    //   items: JSON.stringify(cart), contact: JSON.stringify(form),
-    //   total, promo: piApplied, status: 'pending', created_at: new Date().toISOString()
-    // })
+            const bookedDateStr = selDate ? fmtD(selDate) : null
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cart.map(c => ({
+              name: c.lesson.title,
+              description: c.lesson.description,
+              price: c.lesson.price.min,
+              quantity: c.quantity,
+            })),
+            customerEmail: form.email,
+            customerName: form.name,
+            promoCode: piApplied ? PROMO : undefined,
+            bookedDate: bookedDateStr,
+            bookedTime: selTime,
+          }),
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          setFErr(err.error || 'Checkout failed. Please try again.')
+          return
+        }
+        const { url } = await res.json()
+        window.location.href = url
 
-    // TODO: Stripe — create checkout session and redirect
-    // const res = await fetch('/api/checkout', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ cart, total, email: form.email, name: form.name })
-    // })
-    // const { url } = await res.json()
-    // window.location.href = url
-
-    alert(`Booking received! We'll reach out to ${form.email} to confirm.\n\n[Stripe + Supabase integration pending — see TODO comments in source]`)
-    setDone(true)
-  }
 
   if(done) return (
     <section id="book" className="sec" style={{background:'var(--bg2)',textAlign:'center'}}>
