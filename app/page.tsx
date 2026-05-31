@@ -1,7 +1,7 @@
 'use client'
 
 import React, {
-  useState, useEffect, useRef, useCallback, useMemo,
+  useState, useEffect, useRef, useMemo,
 } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
@@ -76,20 +76,25 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',system-ui,sans-s
 .ap{animation:kpPulse 1.7s ease-out infinite}
 
 .btn-g{display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:12px 26px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:12px;
-  letter-spacing:.17em;text-transform:uppercase;background:var(--o5);color:var(--bg);
+  padding:13px 28px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;background:var(--o5);color:var(--bg);
   border:1px solid var(--o5);cursor:pointer;transition:all .22s ease;text-decoration:none;
-  user-select:none;white-space:nowrap}
+  user-select:none;white-space:nowrap;min-height:44px}
 .btn-g:hover{background:var(--o3);border-color:var(--o3);transform:translateY(-1px)}
 .btn-g:active{transform:translateY(0)}
-.btn-g:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-g:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-g:focus-visible{outline:2px solid var(--o5);outline-offset:3px}
 
 .btn-w{display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:12px 26px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:12px;
-  letter-spacing:.17em;text-transform:uppercase;background:transparent;color:var(--t1);
+  padding:13px 28px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;background:transparent;color:var(--t1);
   border:1px solid var(--bd);cursor:pointer;transition:all .22s ease;text-decoration:none;
-  user-select:none;white-space:nowrap}
-.btn-w:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.05)}
+  user-select:none;white-space:nowrap;min-height:44px}
+.btn-w:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.05)}
+.btn-w:focus-visible{outline:2px solid rgba(255,255,255,.4);outline-offset:3px}
+
+button:focus-visible{outline:2px solid var(--o5);outline-offset:2px}
+a:focus-visible{outline:2px solid var(--o5);outline-offset:3px}
 
 .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;
   text-transform:uppercase;color:var(--o5)}
@@ -97,7 +102,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',system-ui,sans-s
   font-size:clamp(44px,7vw,86px);line-height:.91;color:var(--t1)}
 
 .kcard{background:var(--bgc);border:1px solid var(--bd);transition:all .3s ease}
-.kcard:hover{background:var(--bch);border-color:rgba(255,255,255,.13);transform:translateY(-2px)}
+.kcard:hover{background:var(--bch);border-color:rgba(255,255,255,.12);transform:translateY(-3px)}
 
 .acc{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s ease}
 .acc.open{grid-template-rows:1fr}
@@ -122,6 +127,24 @@ input,textarea{font-family:'DM Sans',sans-serif}
 
 .sec{padding:clamp(80px,10vw,140px) clamp(20px,4vw,40px)}
 .wrap{max-width:1280px;margin:0 auto}
+
+.lesson-row{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;cursor:pointer;transition:all .22s ease;text-align:left;width:100%;
+  min-height:72px}
+.lesson-row:hover{background:var(--bch) !important}
+
+.time-btn{padding:11px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;
+  cursor:pointer;transition:all .2s;min-height:42px;border:none}
+.time-btn:disabled{cursor:not-allowed}
+.time-btn:not(:disabled):focus-visible{outline:2px solid var(--o5);outline-offset:2px}
+
+.date-btn{flex-shrink:0;padding:11px 13px;text-align:center;cursor:pointer;transition:all .22s;min-height:64px}
+.date-btn:focus-visible{outline:2px solid var(--o5);outline-offset:2px}
+
+.qty-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;font-size:18px;border:none}
+.qty-btn:hover{background:var(--bgc) !important}
+.qty-btn:focus-visible{outline:2px solid var(--o5);outline-offset:2px}
 `
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -182,27 +205,34 @@ const ICAPS = [
   '14th Teeshot',
 ]
 
+// Contextual subtitles — used where a caption needs more story
+const ICAP_SUBS: (string|null)[] = [
+  null, null, null, null, null, null, null, null, null,
+  'Caddied for a Pine Valley member — 6× NBA Champion',
+  null,
+]
+
 const LESSONS: Lesson[] = [
   { id:'l30',title:'30-Min Lesson',duration:'30 minutes',price:{min:39.99,max:44.99},type:'single',
-    description:'Laser-focused on one aspect of your game. Perfect for a quick tune-up.',
+    description:'Laser-focused on one aspect of your game. Perfect for a quick tune-up or a targeted fix.',
     details:['1-on-1 instruction','Video feedback','One drill to take home'] },
   { id:'l45',title:'45-Min Lesson',duration:'45 minutes',price:{min:49.99,max:59.99},type:'single',popular:true,
     description:'Our most booked session. Enough time to diagnose, fix, and ingrain a real change.',
-    details:['1-on-1 instruction','Video swing analysis','2 practice drills','Personalized feedback'] },
+    details:['1-on-1 instruction','Video swing analysis','Two practice drills','Personalized feedback'] },
   { id:'l60',title:'60-Min Lesson',duration:'60 minutes',price:{min:59.99,max:69.99},type:'single',
     description:'A deep dive into your full swing, short game, or on-course decision making.',
     details:['1-on-1 instruction','Full video analysis','Multi-area coverage','Written practice plan'] },
   { id:'l90',title:'90-Min Lesson',duration:'90 minutes',price:{min:84.99,max:99.99},type:'single',
-    description:'The complete assessment — full game from tee to green. Where real transformation starts.',
-    details:['1-on-1 instruction','Complete swing analysis','Short game work','Full practice plan','On-course tips'] },
+    description:'The complete assessment — tee to green. Where real transformation starts.',
+    details:['1-on-1 instruction','Complete swing analysis','Short game work','Full practice plan','On-course strategy'] },
   { id:'pk3',title:'3×45 Starter Pack',duration:'3 sessions · 45 min each',price:{min:139.99,max:154.99},type:'pack',sessions:3,promoEligible:true,
     description:'Three focused sessions to build real momentum and see results on the course.',
     details:['3 × 45-min sessions','Progress tracking','Custom drill library','Between-session tips'] },
   { id:'pk5',title:'5×60 Break-90 Pack',duration:'5 sessions · 60 min each',price:{min:264.99,max:304.99},type:'pack',sessions:5,bestValue:true,promoEligible:true,
-    description:'Built for golfers serious about breaking 90. A full game transformation over 5 sessions.',
+    description:'Built for golfers serious about breaking 90. A full game transformation over five sessions.',
     details:['5 × 60-min sessions','Full swing overhaul','Short game focus','Course management','Handicap goal plan'] },
   { id:'pkj',title:'4×45 Junior Pack',duration:'4 sessions · 45 min each',price:{min:164.99,max:184.99},type:'pack',sessions:4,promoEligible:true,
-    description:'For young golfers ages 6–17. Fun, patient, built for long-term athletic development.',
+    description:'For young golfers ages 6–17. Fun, patient, and built for long-term athletic development.',
     details:['4 × 45-min sessions','Age-appropriate drills','Fun fundamentals','Parent updates after each session'] },
 ]
 
@@ -220,13 +250,13 @@ function getDates(): Date[] {
 
 const FAQS=[
   { q:'Are you PGA certified?',
-    a:"No — and that's kind of the point. I'm not a textbook instructor with a laminated card. I learned golf from the ground up, caddied at two of the most prestigious courses in the world — Tavistock and Pine Valley — and spent years figuring out what actually fixes a real golfer's game. No jargon. No $300/hr ego. Just real feedback that shows up on your scorecard." },
+    a:"No — and that's kind of the point. I'm not a textbook instructor with a laminated card. I learned golf from the ground up, caddied at two of the most prestigious courses in the world — Tavistock and Pine Valley — and spent years figuring out what actually fixes a real golfer's game. No jargon. No $300/hr ego. Just honest feedback that shows up on your scorecard." },
   { q:'Where are lessons held?',
-    a:"At driving ranges and practice facilities across South Jersey. Once you book, I'll confirm a spot convenient for you. I keep a few local locations in rotation and recommend the best fit based on what we're working on." },
+    a:"At driving ranges and practice facilities across South Jersey. Once you book, I'll confirm a convenient spot for you. I keep a few local locations in rotation and recommend the best fit based on what we're working on." },
   { q:'What should I bring?',
-    a:"Your clubs, golf shoes or sneakers, and a willingness to try something different. I bring alignment sticks, training aids, and my phone for video analysis. No clubs yet? No problem — we can work with loaners or I'll help you figure out what to get." },
+    a:"Your clubs, golf shoes or sneakers, and a willingness to try something different. I bring alignment sticks, training aids, and my phone for video analysis. No clubs yet? No problem — I'll help you figure out what you need." },
   { q:'Can I reschedule or cancel?',
-    a:"Absolutely. Just give me at least 24 hours and we'll sort it out. Pack sessions don't expire, so no stress if you need to push a session. I'm not a big box golf academy — I'm flexible because I'm real." },
+    a:"Absolutely. Give me at least 24 hours and we'll sort it out. Pack sessions don't expire, so no stress if you need to push a session. I'm not a big box golf academy — I'm flexible because I run this personally." },
 ]
 
 const STEPS=[
@@ -234,14 +264,14 @@ const STEPS=[
   {n:'02',icon:'📅',title:'Pick a Time',desc:'Select a date and time from available slots. First-timers get priority.'},
   {n:'03',icon:'🔒',title:'Lock It In',desc:'Pay securely online. Your spot is confirmed instantly.'},
   {n:'04',icon:'🏌️',title:'Show Up & Swing',desc:'Meet at the range. We diagnose, drill, and practice — no judgment.'},
-  {n:'05',icon:'📋',title:'Take the Plan Home',desc:'Leave with a custom practice plan so every range session counts.'},
+  {n:'05',icon:'📋',title:'Take the Plan Home',desc:'Leave with a custom practice plan so every range session after this one counts.'},
 ]
 
 const PILLARS=[
   {icon:'🏆',title:"Lived at the Game's Highest Level",
    body:"I caddied at Tavistock and Pine Valley — two of the most storied courses in the world. That experience gave me an eye for the game that no classroom ever could."},
   {icon:'🎯',title:'Real Fixes, Real Fast',
-   body:"Skip the theory. I teach simple mechanical cues and instant drills that show up on the scorecard within a round or two. No jargon, no fluff."},
+   body:"Skip the theory. I teach simple mechanical cues and targeted drills that show up on the scorecard within a round or two. No jargon, no fluff."},
   {icon:'💚',title:'Built for South Jersey Golfers',
    body:"Weekend warriors, beginners, juniors. My pricing is built for real golfers — not golf academies. You don't need a trust fund to play better golf."},
 ]
@@ -288,13 +318,19 @@ function LoadingScreen({onDone}:{onDone:()=>void}) {
   const enter=()=>{if(phase!=='ready')return;setPhase('out');setTimeout(onDone,680)}
   const S={position:'absolute' as const,width:28,height:28,borderStyle:'solid' as const,borderColor:'#6b4c10'}
   return (
-    <div onClick={enter} style={{
-      position:'fixed',inset:0,zIndex:9999,background:'#070f0a',
-      display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
-      cursor:phase==='ready'?'pointer':'default',
-      opacity:phase==='out'?0:1,visibility:phase==='out'?'hidden':'visible',
-      transition:'opacity .68s ease,visibility .68s ease',
-    }}>
+    <div
+      onClick={enter}
+      role="button"
+      aria-label="Enter site"
+      tabIndex={0}
+      onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')enter()}}
+      style={{
+        position:'fixed',inset:0,zIndex:9999,background:'#070f0a',
+        display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+        cursor:phase==='ready'?'pointer':'default',
+        opacity:phase==='out'?0:1,visibility:phase==='out'?'hidden':'visible',
+        transition:'opacity .68s ease,visibility .68s ease',
+      }}>
       <div style={{...S,top:24,left:24,borderWidth:'1px 0 0 1px'}}/>
       <div style={{...S,top:24,right:24,borderWidth:'1px 1px 0 0'}}/>
       <div style={{...S,bottom:24,left:24,borderWidth:'0 0 1px 1px'}}/>
@@ -337,38 +373,51 @@ function Navbar() {
     window.addEventListener('scroll',fn,{passive:true});return()=>window.removeEventListener('scroll',fn)
   },[])
   const go=(h:string)=>{document.querySelector(h)?.scrollIntoView({behavior:'smooth'});setOpen(false)}
-  const lb:React.CSSProperties={fontFamily:"'DM Sans',sans-serif",fontSize:11,letterSpacing:'.14em',
-    textTransform:'uppercase',color:'#96a89a',background:'none',border:'none',cursor:'pointer',padding:0,transition:'color .2s'}
+  const lb:React.CSSProperties={
+    fontFamily:"'DM Sans',sans-serif",fontSize:11,letterSpacing:'.14em',
+    textTransform:'uppercase',color:'#96a89a',background:'none',border:'none',
+    cursor:'pointer',padding:'4px 0',transition:'color .2s',minHeight:44,display:'flex',alignItems:'center',
+  }
   return (
     <>
       <nav style={{
-        position:'fixed',top:0,left:0,right:0,zIndex:200,height:68,padding:'0 24px',
+        position:'fixed',top:0,left:0,right:0,zIndex:200,height:68,padding:'0 clamp(20px,3vw,36px)',
         display:'flex',alignItems:'center',justifyContent:'space-between',
         background:scrolled?'rgba(7,15,10,.94)':'transparent',
         backdropFilter:scrolled?'blur(14px)':'none',
         borderBottom:`1px solid ${scrolled?'rgba(255,255,255,.07)':'transparent'}`,
         transition:'all .38s ease',
       }}>
-        <button onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} style={{
-          fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:400,
-          color:'#ede8dc',background:'none',border:'none',cursor:'pointer',padding:0,
-        }}>KP<span style={{color:'#c5983e'}}>.</span></button>
+        <button
+          onClick={()=>window.scrollTo({top:0,behavior:'smooth'})}
+          aria-label="KP Golf Training — scroll to top"
+          style={{
+            fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:400,
+            color:'#ede8dc',background:'none',border:'none',cursor:'pointer',padding:'4px 0',
+            lineHeight:1,
+          }}>KP<span style={{color:'#c5983e'}}>.</span>
+        </button>
 
         {/* Desktop */}
-        <div className="nd" style={{alignItems:'center',gap:36}}>
+        <div className="nd" style={{alignItems:'center',gap:40}}>
           {NAV.map(l=>(
             <button key={l.h} onClick={()=>go(l.h)} style={lb}
               onMouseEnter={e=>(e.currentTarget.style.color='#ede8dc')}
               onMouseLeave={e=>(e.currentTarget.style.color='#96a89a')}
             >{l.l}</button>
           ))}
-          <button onClick={()=>go('#book')} className="btn-g" style={{padding:'8px 18px',fontSize:11}}>Book Now</button>
+          <button onClick={()=>go('#book')} className="btn-g" style={{padding:'9px 20px',fontSize:10}}>
+            Book a Lesson
+          </button>
         </div>
 
         {/* Hamburger */}
-        <button className="nh" onClick={()=>setOpen(o=>!o)} style={{
-          background:'none',border:'none',cursor:'pointer',flexDirection:'column',gap:5,padding:4,
-        }}>
+        <button
+          className="nh"
+          onClick={()=>setOpen(o=>!o)}
+          aria-label={open?'Close menu':'Open menu'}
+          aria-expanded={open}
+          style={{background:'none',border:'none',cursor:'pointer',flexDirection:'column',gap:5,padding:8}}>
           {[0,1,2].map(i=>(
             <span key={i} style={{
               display:'block',width:22,height:1,background:'#ede8dc',
@@ -380,21 +429,29 @@ function Navbar() {
       </nav>
 
       {/* Mobile drawer */}
-      <div style={{
-        position:'fixed',top:68,left:0,right:0,zIndex:199,
-        background:'rgba(7,15,10,.97)',backdropFilter:'blur(20px)',
-        borderBottom:'1px solid rgba(255,255,255,.07)',
-        padding:'28px 28px 40px',display:'flex',flexDirection:'column',gap:28,
-        transform:open?'translateY(0)':'translateY(-110%)',
-        transition:'transform .36s cubic-bezier(.4,0,.2,1)',
-      }}>
+      <div
+        aria-hidden={!open}
+        style={{
+          position:'fixed',top:68,left:0,right:0,zIndex:199,
+          background:'rgba(7,15,10,.97)',backdropFilter:'blur(20px)',
+          borderBottom:'1px solid rgba(255,255,255,.07)',
+          padding:'32px 28px 48px',display:'flex',flexDirection:'column',gap:6,
+          transform:open?'translateY(0)':'translateY(-110%)',
+          transition:'transform .36s cubic-bezier(.4,0,.2,1)',
+          pointerEvents:open?'auto':'none',
+        }}>
         {NAV.map(l=>(
           <button key={l.h} onClick={()=>go(l.h)} style={{
-            fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,
-            color:'#ede8dc',background:'none',border:'none',cursor:'pointer',textAlign:'left',padding:0,
+            fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:300,
+            color:'#ede8dc',background:'none',border:'none',cursor:'pointer',
+            textAlign:'left',padding:'10px 0',lineHeight:1.1,
+            borderBottom:'1px solid rgba(255,255,255,.04)',
           }}>{l.l}</button>
         ))}
-        <button onClick={()=>go('#book')} className="btn-g" style={{alignSelf:'flex-start'}}>Book a Lesson</button>
+        <div style={{height:8}}/>
+        <button onClick={()=>go('#book')} className="btn-g" style={{alignSelf:'flex-start',marginTop:8}}>
+          Book a Lesson
+        </button>
       </div>
     </>
   )
@@ -413,7 +470,7 @@ function FallingBg() {
     }))
   },[])
   return (
-    <div style={{
+    <div aria-hidden="true" style={{
       position:'absolute',inset:0,overflow:'hidden',pointerEvents:'none',zIndex:1,
       maskImage:'linear-gradient(to bottom,black 0%,black 38%,transparent 76%)',
       WebkitMaskImage:'linear-gradient(to bottom,black 0%,black 38%,transparent 76%)',
@@ -426,12 +483,12 @@ function FallingBg() {
           ['--fr' as string]:`${el.rotate}deg`,
         }}>
           {el.type==='ball'&&(
-            <svg viewBox="0 0 32 32" width={el.size} height={el.size} style={{opacity:el.opacity}}>
+            <svg viewBox="0 0 32 32" width={el.size} height={el.size}>
               <circle cx="16" cy="16" r="14" fill="white" stroke="#ddd" strokeWidth="0.5"/>
               <circle cx="11" cy="11" r="1.5" fill="#ccc" opacity="0.6"/>
-              <circle cx="16" cy="9" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="16" cy="9"  r="1.5" fill="#ccc" opacity="0.6"/>
               <circle cx="21" cy="11" r="1.5" fill="#ccc" opacity="0.6"/>
-              <circle cx="9" cy="16" r="1.5" fill="#ccc" opacity="0.6"/>
+              <circle cx="9"  cy="16" r="1.5" fill="#ccc" opacity="0.6"/>
               <circle cx="14" cy="15" r="1.5" fill="#ccc" opacity="0.6"/>
               <circle cx="19" cy="15" r="1.5" fill="#ccc" opacity="0.6"/>
               <circle cx="23" cy="16" r="1.5" fill="#ccc" opacity="0.6"/>
@@ -467,46 +524,70 @@ function Hero() {
         objectFit:'cover',opacity:.16,zIndex:0,
       }}/>
       <div style={{position:'absolute',inset:0,zIndex:1,
-        background:'linear-gradient(142deg,rgba(7,15,10,.97) 0%,rgba(7,15,10,.65) 52%,rgba(7,15,10,.92) 100%)'}}/>
+        background:'linear-gradient(142deg,rgba(7,15,10,.97) 0%,rgba(7,15,10,.62) 52%,rgba(7,15,10,.92) 100%)'}}/>
       <div style={{position:'absolute',inset:0,zIndex:1,
         background:'radial-gradient(ellipse at 72% 50%,rgba(197,152,62,.045) 0%,transparent 58%)'}}/>
       <FallingBg/>
 
-      <div style={{position:'relative',zIndex:10,width:'100%',maxWidth:1280,margin:'0 auto',padding:'120px clamp(20px,4vw,40px) 80px'}}>
-        <div style={{maxWidth:780}}>
-          <div className="lbl" style={{marginBottom:28,display:'flex',alignItems:'center',gap:16}}>
-            <span style={{width:36,height:1,background:'#c5983e',display:'inline-block'}}/>
+      <div style={{position:'relative',zIndex:10,width:'100%',maxWidth:1280,margin:'0 auto',
+        padding:'124px clamp(20px,4vw,40px) 80px'}}>
+        <div style={{maxWidth:800}}>
+
+          {/* Eyebrow */}
+          <div className="lbl" style={{marginBottom:30,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+            <span style={{width:36,height:1,background:'#c5983e',display:'inline-block',flexShrink:0}}/>
             South Jersey Golf Lessons — Starting at $39.99
           </div>
+
+          {/* Headline */}
           <h1 style={{
             fontFamily:"'Cormorant Garamond',serif",
-            fontSize:'clamp(68px,11vw,130px)',fontWeight:400,lineHeight:.88,
-            color:'#ede8dc',marginBottom:32,letterSpacing:'-.025em',
+            fontSize:'clamp(64px,10.5vw,128px)',fontWeight:400,lineHeight:.88,
+            color:'#ede8dc',marginBottom:30,letterSpacing:'-.025em',
           }}>
             Real Golf.<br/>
             <em style={{color:'#d8b05a',fontStyle:'italic'}}>Real</em> Results.
           </h1>
-          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:18,lineHeight:1.65,
-            color:'#96a89a',maxWidth:520,marginBottom:52}}>
+
+          {/* Sub */}
+          <p style={{
+            fontFamily:"'DM Sans',sans-serif",fontSize:'clamp(15px,1.8vw,18px)',lineHeight:1.65,
+            color:'#96a89a',maxWidth:500,marginBottom:48,
+          }}>
             Former caddie at Pine Valley &amp; Tavistock. Judgment-free lessons for beginners,
             weekend warriors, and everyone in between.
           </p>
-          <div style={{display:'flex',gap:14,flexWrap:'wrap',marginBottom:72}}>
+
+          {/* CTAs */}
+          <div style={{display:'flex',gap:14,flexWrap:'wrap',marginBottom:68}}>
             <button onClick={()=>go('#book')} className="btn-g">Book Your First Lesson</button>
             <button onClick={()=>go('#videos')} className="btn-w">Watch Swing Videos ↓</button>
           </div>
-          <div style={{display:'flex',gap:52,flexWrap:'wrap'}}>
-            {[['$39.99','Starting price'],['2','Elite courses caddied'],['5★','Client reviews']].map(([v,l])=>(
+
+          {/* Metrics */}
+          <div style={{display:'flex',gap:clamp(36,52),flexWrap:'wrap',rowGap:28}}>
+            {[
+              ['$39.99','Starting price'],
+              ['2','Elite courses'],
+              ['1-on-1','Every session'],
+            ].map(([v,l])=>(
               <div key={l}>
-                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:44,fontWeight:300,color:'#d8b05a',lineHeight:1}}>{v}</div>
-                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.16em',textTransform:'uppercase',color:'#506056',marginTop:5}}>{l}</div>
+                <div style={{
+                  fontFamily:"'Cormorant Garamond',serif",
+                  fontSize:'clamp(34px,4.5vw,46px)',fontWeight:300,color:'#d8b05a',lineHeight:1,
+                }}>{v}</div>
+                <div style={{
+                  fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                  letterSpacing:'.16em',textTransform:'uppercase',color:'#506056',marginTop:6,
+                }}>{l}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div style={{position:'absolute',bottom:36,left:'50%',transform:'translateX(-50%)',
+      {/* Scroll indicator */}
+      <div aria-hidden="true" style={{position:'absolute',bottom:36,left:'50%',transform:'translateX(-50%)',
         zIndex:10,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
         <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.2em',
           textTransform:'uppercase',color:'#506056',writingMode:'vertical-rl'}}>Scroll</div>
@@ -515,6 +596,8 @@ function Hero() {
     </section>
   )
 }
+
+function clamp(min:number,max:number){ return Math.max(min,Math.min(max,min+(max-min)*.5)) }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARQUEES
@@ -525,9 +608,11 @@ function Marquees() {
     <div style={{overflow:'hidden'}}>
       <div className={dir==='l'?'aml':'amr'} style={{'--ms':spd} as React.CSSProperties}>
         {[...words,...words].map((w,i)=>(
-          <span key={i} style={{display:'inline-flex',alignItems:'center',gap:18,
+          <span key={i} style={{
+            display:'inline-flex',alignItems:'center',gap:18,
             fontFamily:"'DM Sans',sans-serif",fontSize:12,letterSpacing:'.11em',textTransform:'uppercase',
-            color:dir==='l'?'var(--t2)':'var(--t3)',whiteSpace:'nowrap',paddingRight:18}}>
+            color:dir==='l'?'var(--t2)':'var(--t3)',whiteSpace:'nowrap',paddingRight:18,
+          }}>
             {w}<span style={{color:dir==='l'?'var(--o5)':'var(--o7)',fontSize:5}}>●</span>
           </span>
         ))}
@@ -547,18 +632,30 @@ function Marquees() {
 // WHY KP
 // ─────────────────────────────────────────────────────────────────────────────
 function WhyKP() {
-  const {ref,inView}=useInView({threshold:.18,once:true})
+  const {ref,inView}=useInView({threshold:.15,once:true})
   return (
     <section id="about" ref={ref} className="sec" style={{maxWidth:1280,margin:'0 auto'}}>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:72,alignItems:'center'}}>
-        <div style={{position:'relative',opacity:inView?1:0,transition:'opacity .9s ease'}}>
-          <div style={{position:'absolute',inset:-16,border:'1px solid var(--bd)',zIndex:0}}/>
+
+        {/* Image */}
+        <div style={{
+          position:'relative',
+          opacity:inView?1:0,
+          transform:inView?'none':'translateX(-20px)',
+          transition:'opacity .9s ease,transform .9s ease',
+        }}>
+          <div style={{position:'absolute',inset:-16,border:'1px solid var(--bd)',zIndex:0,pointerEvents:'none'}}/>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={IMGS[0]} alt="KP Golf Training" style={{width:'100%',aspectRatio:'3/4',objectFit:'cover',position:'relative',zIndex:1,display:'block'}}/>
-          <div style={{position:'absolute',bottom:24,left:-20,zIndex:2,background:'var(--bg)',border:'1px solid var(--ba)',padding:'10px 18px'}}>
+          <img src={IMGS[0]} alt="KP on the course at Pine Valley" style={{
+            width:'100%',aspectRatio:'3/4',objectFit:'cover',position:'relative',zIndex:1,display:'block',
+          }}/>
+          <div style={{position:'absolute',bottom:24,left:-20,zIndex:2,background:'var(--bg)',
+            border:'1px solid var(--ba)',padding:'10px 18px'}}>
             <span className="lbl" style={{fontSize:9}}>Former Caddie · Pine Valley · Tavistock</span>
           </div>
         </div>
+
+        {/* Copy */}
         <div>
           <div className="lbl" style={{marginBottom:18}}>Why KP Training</div>
           <h2 className="hdg" style={{marginBottom:26}}>The Bag Tag<br/><em>Means Something.</em></h2>
@@ -567,16 +664,21 @@ function WhyKP() {
             best players navigate every lie, every wind, every pressure putt. That's the education
             I'm bringing to South Jersey.
           </p>
-          <div style={{display:'flex',flexDirection:'column',gap:26}}>
+          <div style={{display:'flex',flexDirection:'column',gap:28}}>
             {PILLARS.map((p,i)=>(
-              <div key={i} style={{display:'flex',gap:20,alignItems:'flex-start',
+              <div key={i} style={{
+                display:'flex',gap:20,alignItems:'flex-start',
                 opacity:inView?1:0,
                 transform:inView?'none':'translateX(28px)',
-                transition:`opacity .65s ease ${.18+i*.16}s,transform .65s ease ${.18+i*.16}s`}}>
-                <div style={{flexShrink:0,width:46,height:46,background:'var(--bgc)',border:'1px solid var(--bd)',
-                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>{p.icon}</div>
+                transition:`opacity .65s ease ${.2+i*.15}s,transform .65s ease ${.2+i*.15}s`,
+              }}>
+                <div style={{
+                  flexShrink:0,width:48,height:48,background:'var(--bgc)',
+                  border:'1px solid var(--o7)',
+                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,
+                }}>{p.icon}</div>
                 <div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,color:'var(--t1)',marginBottom:6}}>{p.title}</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,color:'var(--t1)',marginBottom:7}}>{p.title}</div>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t2)',lineHeight:1.7}}>{p.body}</div>
                 </div>
               </div>
@@ -594,9 +696,11 @@ function WhyKP() {
 function VSlide({src,idx,slideW}:{src:string;idx:number;slideW:string}) {
   const {ref,playing}=useAutoplay(.5)
   return (
-    <div style={{flexShrink:0,width:slideW,aspectRatio:'9/16',
-      position:'relative',overflow:'hidden',background:'var(--bgc)',border:'1px solid var(--bd)',
-      scrollSnapAlign:'center'}}>
+    <div style={{
+      flexShrink:0,width:slideW,aspectRatio:'9/16',
+      position:'relative',overflow:'hidden',background:'var(--bgc)',
+      border:'1px solid var(--bd)',scrollSnapAlign:'center',
+    }}>
       <video ref={ref} src={src} muted loop playsInline style={{width:'100%',height:'100%',objectFit:'cover'}}/>
       <div style={{position:'absolute',inset:0,background:'rgba(7,15,10,.32)',
         opacity:playing?0:1,transition:'opacity .55s ease',pointerEvents:'none'}}/>
@@ -605,12 +709,12 @@ function VSlide({src,idx,slideW}:{src:string;idx:number;slideW:string}) {
           background:'rgba(7,15,10,.72)',padding:'5px 10px',border:'1px solid var(--bd)'}}>
           <div className="ap" style={{width:6,height:6,borderRadius:'50%',background:'#c5983e'}}/>
           <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-            textTransform:'uppercase',color:'#d8b05a'}}>Playing</span>
+            textTransform:'uppercase',color:'#d8b05a'}}>Live</span>
         </div>
       )}
       <div style={{position:'absolute',bottom:14,left:16,fontFamily:"'JetBrains Mono',monospace",
         fontSize:9,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--t3)'}}>
-        Clip {String(idx+1).padStart(2,'0')} / {String(VIDEOS.length).padStart(2,'0')}
+        {String(idx+1).padStart(2,'0')} / {String(VIDEOS.length).padStart(2,'0')}
       </div>
     </div>
   )
@@ -625,7 +729,7 @@ function VideoSlider() {
   useEffect(()=>{
     const check=()=>setIsMobile(window.innerWidth<768)
     check()
-    window.addEventListener('resize',check)
+    window.addEventListener('resize',check,{passive:true})
     return()=>window.removeEventListener('resize',check)
   },[])
 
@@ -636,6 +740,7 @@ function VideoSlider() {
     s?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})
     setAct(i)
   }
+
   return (
     <section id="videos" ref={ref} style={{padding:'clamp(80px,10vw,140px) 0'}}>
       <div style={{maxWidth:1280,margin:'0 auto',padding:'0 clamp(20px,4vw,40px)',marginBottom:48}}>
@@ -643,31 +748,38 @@ function VideoSlider() {
         <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:24}}>
           <h2 className="hdg">See the Work<br/><em>In Action.</em></h2>
           <div style={{display:'flex',gap:10}}>
-            <button onClick={()=>go(Math.max(0,act-1))} className="btn-w" style={{padding:'10px 18px',fontSize:20}}>←</button>
-            <button onClick={()=>go(Math.min(VIDEOS.length-1,act+1))} className="btn-w" style={{padding:'10px 18px',fontSize:20}}>→</button>
+            <button
+              onClick={()=>go(Math.max(0,act-1))}
+              aria-label="Previous video"
+              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>←</button>
+            <button
+              onClick={()=>go(Math.min(VIDEOS.length-1,act+1))}
+              aria-label="Next video"
+              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>→</button>
           </div>
         </div>
       </div>
+
       <div style={{position:'relative'}}>
         <div ref={scRef} className="ns" style={{
-          display:'flex',gap:18,overflowX:'auto',scrollSnapType:'x mandatory',
+          display:'flex',gap:16,overflowX:'auto',scrollSnapType:'x mandatory',
           padding:'0 clamp(20px,4vw,40px)',
           opacity:inView?1:0,transition:'opacity .9s ease',
         }}>
           {VIDEOS.map((src,i)=><VSlide key={i} src={src} idx={i} slideW={slideW}/>)}
         </div>
-        {/* Left/right gradient fade */}
-        <div style={{
+        <div aria-hidden="true" style={{
           position:'absolute',inset:0,pointerEvents:'none',zIndex:2,
-          background:'linear-gradient(to right, #070f0a 0%, transparent 10%, transparent 90%, #070f0a 100%)',
+          background:'linear-gradient(to right,#070f0a 0%,transparent 8%,transparent 92%,#070f0a 100%)',
         }}/>
       </div>
+
       <div style={{display:'flex',gap:8,justifyContent:'center',marginTop:32}}>
         {VIDEOS.map((_,i)=>(
-          <button key={i} onClick={()=>go(i)} style={{
+          <button key={i} onClick={()=>go(i)} aria-label={`Go to clip ${i+1}`} style={{
             height:4,border:'none',cursor:'pointer',borderRadius:2,padding:0,
             background:i===act?'var(--o5)':'var(--bd)',
-            width:i===act?26:8,transition:'all .3s ease',
+            width:i===act?28:8,transition:'all .3s ease',minWidth:8,
           }}/>
         ))}
       </div>
@@ -687,14 +799,21 @@ function ImageSlider() {
     return()=>clearInterval(t)
   },[inView])
   const go=(d:1|-1)=>setAct(p=>(p+d+IMGS.length)%IMGS.length)
+
   return (
     <section ref={ref} style={{padding:'clamp(80px,10vw,140px) clamp(20px,4vw,40px)'}}>
       <div style={{maxWidth:1280,margin:'0 auto'}}>
         <div className="lbl" style={{textAlign:'center',marginBottom:18}}>Gallery</div>
-        <h2 className="hdg" style={{textAlign:'center',marginBottom:52}}>The Course.<br/><em>The Range. The Work.</em></h2>
-        <div style={{position:'relative',aspectRatio:'16/9',overflow:'hidden',
+        <h2 className="hdg" style={{textAlign:'center',marginBottom:52}}>
+          The Course.<br/><em>The Range. The Work.</em>
+        </h2>
+
+        {/* Main frame */}
+        <div style={{
+          position:'relative',aspectRatio:'16/9',overflow:'hidden',
           background:'var(--bgc)',marginBottom:14,
-          opacity:inView?1:0,transition:'opacity .85s ease'}}>
+          opacity:inView?1:0,transition:'opacity .85s ease',
+        }}>
           {IMGS.map((src,i)=>(
             // eslint-disable-next-line @next/next/no-img-element
             <img key={i} src={src} alt={ICAPS[i]} style={{
@@ -702,30 +821,52 @@ function ImageSlider() {
               opacity:i===act?1:0,transition:'opacity .85s ease',
             }}/>
           ))}
-          <div style={{position:'absolute',inset:0,background:'rgba(7,15,10,.87)',
-            opacity:inView?0:1,transition:'opacity .85s ease',pointerEvents:'none'}}/>
-          <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'64px 28px 24px',
-            background:'linear-gradient(to top,rgba(7,15,10,.9) 0%,transparent 100%)',pointerEvents:'none'}}>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontStyle:'italic',color:'var(--t1)',lineHeight:1.2}}>{ICAPS[act]}</div>
-            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--t3)',marginTop:5}}>
+
+          {/* Caption gradient */}
+          <div style={{
+            position:'absolute',bottom:0,left:0,right:0,
+            padding:'72px 28px 24px',
+            background:'linear-gradient(to top,rgba(7,15,10,.92) 0%,transparent 100%)',
+            pointerEvents:'none',
+          }}>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontStyle:'italic',
+              color:'var(--t1)',lineHeight:1.2}}>
+              {ICAPS[act]}
+            </div>
+            {ICAP_SUBS[act]&&(
+              <div style={{
+                fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+                textTransform:'uppercase',color:'var(--o5)',marginTop:7,
+              }}>
+                {ICAP_SUBS[act]}
+              </div>
+            )}
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',color:'var(--t4)',marginTop:6}}>
               {String(act+1).padStart(2,'0')} / {String(IMGS.length).padStart(2,'0')}
             </div>
           </div>
-          {([[-1,'left','←'],[1,'right','→']] as [1|-1,string,string][]).map(([d,s,a])=>(
-            <button key={s} onClick={()=>go(d)} style={{
+
+          {/* Nav arrows */}
+          {([[-1,'left','←','']] as [1|-1,string,string,string][])
+            .concat([[1,'right','→','']]).map(([d,s,a,lbl])=>(
+            <button key={s} onClick={()=>go(d as 1|-1)} aria-label={d===-1?'Previous image':'Next image'} style={{
               position:'absolute',top:'50%',transform:'translateY(-50%)',
-              [s]:16,width:44,height:44,background:'rgba(7,15,10,.72)',border:'1px solid var(--bd)',
-              color:'var(--t1)',cursor:'pointer',fontSize:18,
+              [s]:16,width:44,height:44,background:'rgba(7,15,10,.72)',
+              border:'1px solid var(--bd)',color:'var(--t1)',cursor:'pointer',fontSize:18,
               display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s',
             }}>{a}</button>
           ))}
         </div>
+
+        {/* Thumbnails */}
         <div className="ns" style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:2}}>
           {IMGS.map((src,i)=>(
-            <button key={i} onClick={()=>setAct(i)} style={{
-              flexShrink:0,width:76,height:54,padding:0,cursor:'pointer',overflow:'hidden',
+            <button key={i} onClick={()=>setAct(i)} aria-label={`View ${ICAPS[i]}`} style={{
+              flexShrink:0,width:76,height:54,padding:0,cursor:'pointer',
+              overflow:'hidden',background:'none',
               border:`2px solid ${i===act?'var(--o5)':'transparent'}`,
-              opacity:i===act?1:.55,transition:'all .2s',
+              opacity:i===act?1:.48,transition:'all .25s',
             }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={src} alt={ICAPS[i]} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
@@ -741,7 +882,7 @@ function ImageSlider() {
 // PRICING
 // ─────────────────────────────────────────────────────────────────────────────
 function Pricing() {
-  const {ref,inView}=useInView({threshold:.08,once:true})
+  const {ref,inView}=useInView({threshold:.06,once:true})
   const singles=LESSONS.filter(l=>l.type==='single')
   const packs=LESSONS.filter(l=>l.type==='pack')
   const go=()=>document.querySelector('#book')?.scrollIntoView({behavior:'smooth'})
@@ -749,36 +890,70 @@ function Pricing() {
   function Card({lesson,idx}:{lesson:Lesson;idx:number}) {
     return (
       <div className="kcard" style={{
-        padding:28,position:'relative',overflow:'hidden',
-        opacity:inView?1:0,transform:inView?'none':'translateY(36px)',
-        transition:`opacity .6s ease ${idx*.09}s,transform .6s ease ${idx*.09}s`,
+        padding:'28px 26px 26px',position:'relative',overflow:'hidden',
+        display:'flex',flexDirection:'column',
+        opacity:inView?1:0,
+        transform:inView?'none':'translateY(36px)',
+        transition:`opacity .6s ease ${idx*.08}s,transform .6s ease ${idx*.08}s`,
         ...(lesson.popular?{border:'1px solid var(--ba)'}:{}),
       }}>
-        <div style={{display:'flex',gap:8,marginBottom:22,flexWrap:'wrap',minHeight:22}}>
-          {lesson.popular&&<span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',textTransform:'uppercase',background:'var(--o5)',color:'var(--bg)',padding:'3px 9px'}}>Most Popular</span>}
-          {lesson.bestValue&&<span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',textTransform:'uppercase',background:'var(--g7)',color:'var(--t1)',padding:'3px 9px'}}>Best Value</span>}
-          {lesson.promoEligible&&<span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',textTransform:'uppercase',border:'1px solid var(--o7)',color:'var(--o5)',padding:'3px 9px'}}>Promo Eligible</span>}
+        {/* Badge row */}
+        <div style={{display:'flex',gap:7,marginBottom:20,flexWrap:'wrap',minHeight:24,alignItems:'center'}}>
+          {lesson.popular&&(
+            <span style={{
+              fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',background:'var(--o5)',color:'var(--bg)',padding:'4px 10px',
+              fontWeight:500,
+            }}>Most Popular</span>
+          )}
+          {lesson.bestValue&&(
+            <span style={{
+              fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',background:'var(--g7)',color:'var(--t1)',padding:'4px 10px',
+            }}>Best Value</span>
+          )}
+          {lesson.promoEligible&&(
+            <span style={{
+              fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',border:'1px solid var(--o7)',color:'var(--o5)',padding:'3px 9px',
+            }}>Promo Eligible</span>
+          )}
         </div>
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:15,color:'var(--t1)',marginBottom:4}}>{lesson.title}</div>
-        <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:22}}>{lesson.duration}</div>
-        <div style={{display:'flex',alignItems:'baseline',gap:4,marginBottom:6}}>
-          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:52,fontWeight:300,color:'var(--t1)',lineHeight:1}}>${lesson.price.min}</span>
-          <span style={{color:'var(--t3)',fontSize:16,lineHeight:1}}>–{lesson.price.max}</span>
+
+        {/* Title */}
+        <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:14,color:'var(--t1)',marginBottom:4}}>{lesson.title}</div>
+        <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:20}}>{lesson.duration}</div>
+
+        {/* Price */}
+        <div style={{display:'flex',alignItems:'baseline',gap:4,marginBottom:4}}>
+          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:52,fontWeight:300,color:'var(--t1)',lineHeight:1}}>
+            ${lesson.price.min}
+          </span>
+          <span style={{color:'var(--t3)',fontSize:15}}>– {lesson.price.max}</span>
         </div>
         {lesson.sessions&&(
-          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',marginBottom:10}}>
-            ${Math.round(lesson.price.min/lesson.sessions)}–{Math.round(lesson.price.max/lesson.sessions)} / session
+          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',marginBottom:12}}>
+            ~${Math.round(lesson.price.min/lesson.sessions)}–{Math.round(lesson.price.max/lesson.sessions)} per session
           </div>
         )}
-        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.65,marginBottom:22}}>{lesson.description}</p>
-        <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:28}}>
+
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.65,marginBottom:20,flex:1}}>
+          {lesson.description}
+        </p>
+
+        <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:26}}>
           {lesson.details.map((d,i)=>(
-            <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
-              <span style={{color:'var(--o7)',flexShrink:0,marginTop:3,lineHeight:1}}>—</span>{d}
+            <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',
+              fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
+              <span style={{color:'var(--o7)',flexShrink:0,marginTop:2,lineHeight:1.2}}>—</span>
+              <span>{d}</span>
             </div>
           ))}
         </div>
-        <button onClick={go} className="btn-g" style={{width:'100%',justifyContent:'center'}}>Book This</button>
+
+        <button onClick={go} className="btn-g" style={{width:'100%',justifyContent:'center',fontSize:10}}>
+          Book This Lesson
+        </button>
       </div>
     )
   }
@@ -790,21 +965,38 @@ function Pricing() {
           <div className="lbl" style={{marginBottom:18}}>Pricing</div>
           <h2 className="hdg">No Gimmicks.<br/><em>Just Lessons.</em></h2>
         </div>
-        <div style={{background:'rgba(197,152,62,.07)',border:'1px solid var(--ba)',
-          padding:'16px 24px',margin:'52px 0 36px',
-          display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-          <span className="lbl" style={{fontSize:10}}>🎯 Founding Member Deal — Code: <strong>FOUNDING</strong></span>
-          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
-            20% off all lesson packs — {SPOTS} of 15 spots remaining
-          </span>
+
+        {/* Promo banner */}
+        <div style={{
+          background:'rgba(197,152,62,.06)',border:'1px solid var(--ba)',
+          padding:'18px 24px',margin:'52px 0 40px',
+          display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',
+        }}>
+          <span style={{fontSize:18}}>🎯</span>
+          <div>
+            <div className="lbl" style={{fontSize:10,marginBottom:4}}>
+              Founding Member Deal — Code: <strong style={{color:'var(--o3)'}}>FOUNDING</strong>
+            </div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
+              20% off all lesson packs — {SPOTS} of 15 spots remaining
+            </div>
+          </div>
         </div>
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:11,color:'var(--t2)',
-          textTransform:'uppercase',letterSpacing:'.12em',marginBottom:20}}>Individual Sessions</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(230px,1fr))',gap:14,marginBottom:52}}>
+
+        {/* Singles */}
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:500,fontSize:10,
+          color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.16em',marginBottom:18}}>
+          Individual Sessions
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(232px,1fr))',gap:14,marginBottom:56}}>
           {singles.map((l,i)=><Card key={l.id} lesson={l} idx={i}/>)}
         </div>
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:11,color:'var(--t2)',
-          textTransform:'uppercase',letterSpacing:'.12em',marginBottom:20}}>Lesson Packs</div>
+
+        {/* Packs */}
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:500,fontSize:10,
+          color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.16em',marginBottom:18}}>
+          Lesson Packs
+        </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(270px,1fr))',gap:14}}>
           {packs.map((l,i)=><Card key={l.id} lesson={l} idx={singles.length+i}/>)}
         </div>
@@ -822,36 +1014,53 @@ function HowItWorks() {
     <section ref={ref} className="sec">
       <div className="wrap">
         <div style={{textAlign:'center',marginBottom:72}}>
-          <div className="lbl" style={{marginBottom:18}}>Process</div>
+          <div className="lbl" style={{marginBottom:18}}>The Process</div>
           <h2 className="hdg">From Zero to<br/><em>On the Course.</em></h2>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))',gap:36}}>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))',gap:40}}>
           {STEPS.map((step,i)=>(
-            <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',
-              opacity:inView?1:0,transform:inView?'none':'translateY(28px)',
-              transition:`opacity .65s ease ${i*.13}s,transform .65s ease ${i*.13}s`}}>
-              <div style={{width:76,height:76,borderRadius:'50%',background:'var(--bgc)',border:'1px solid var(--bd)',
-                display:'flex',alignItems:'center',justifyContent:'center',fontSize:30,marginBottom:18,position:'relative'}}>
-                {step.icon}
-                <span style={{position:'absolute',top:-8,right:-8,fontFamily:"'JetBrains Mono',monospace",
-                  fontSize:9,letterSpacing:'.1em',background:'var(--o5)',color:'var(--bg)',padding:'2px 6px'}}>{step.n}</span>
+            <div key={i} style={{
+              display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',
+              opacity:inView?1:0,
+              transform:inView?'none':'translateY(28px)',
+              transition:`opacity .65s ease ${i*.12}s,transform .65s ease ${i*.12}s`,
+            }}>
+              {/* Icon circle */}
+              <div style={{
+                width:80,height:80,borderRadius:'50%',
+                background:'var(--bgc)',border:'1px solid var(--o7)',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontSize:28,marginBottom:20,position:'relative',flexShrink:0,
+              }}>
+                <span role="img" aria-hidden="true">{step.icon}</span>
+                <span style={{
+                  position:'absolute',top:-10,right:-6,
+                  fontFamily:"'JetBrains Mono',monospace",
+                  fontSize:9,letterSpacing:'.1em',
+                  background:'var(--o5)',color:'var(--bg)',padding:'3px 7px',
+                }}>{step.n}</span>
               </div>
-              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:400,color:'var(--t1)',marginBottom:10}}>{step.title}</div>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,fontWeight:400,
+                color:'var(--t1)',marginBottom:10,lineHeight:1.2}}>{step.title}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.65}}>{step.desc}</div>
             </div>
           ))}
         </div>
-        <div style={{background:'var(--g9)',border:'1px solid var(--bd)',
-          padding:'clamp(40px,5vw,64px) clamp(28px,5vw,56px)',marginTop:80,textAlign:'center'}}>
-          <h3 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:38,fontWeight:400,color:'var(--t1)',marginBottom:16}}>
-            Ready to start?
-          </h3>
+
+        {/* CTA banner */}
+        <div style={{
+          background:'var(--g9)',border:'1px solid var(--bd)',
+          padding:'clamp(40px,5vw,64px) clamp(28px,5vw,56px)',
+          marginTop:88,textAlign:'center',
+        }}>
+          <h3 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:38,fontWeight:400,
+            color:'var(--t1)',marginBottom:14}}>Ready to start?</h3>
           <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',marginBottom:36}}>
             First lesson starts at $39.99. No experience needed.
           </p>
-          <button onClick={()=>document.querySelector('#book')?.scrollIntoView({behavior:'smooth'})} className="btn-g">
-            Book Your First Lesson
-          </button>
+          <button onClick={()=>document.querySelector('#book')?.scrollIntoView({behavior:'smooth'})}
+            className="btn-g">Book Your First Lesson</button>
         </div>
       </div>
     </section>
@@ -881,23 +1090,21 @@ function Booking() {
 
   const fmtD=(d:Date)=>d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})
 
-  async function fetchAvailability(dateStr: string) {
+  async function fetchAvailability(dateStr:string) {
     setLoadingSlots(true)
     try {
-      const { data } = await supabasePublic
-        .from('bookings')
-        .select('items')
-        .eq('status', 'confirmed')
-      const taken: string[] = []
-      data?.forEach(row => {
-        const items = row.items as Array<{date?:string;time?:string}>
-        items?.forEach(item => { if(item.date===dateStr && item.time) taken.push(item.time) })
+      const {data}=await supabasePublic
+        .from('bookings').select('items').eq('status','confirmed')
+      const taken:string[]=[]
+      data?.forEach(row=>{
+        const items=row.items as Array<{date?:string;time?:string}>
+        items?.forEach(item=>{if(item.date===dateStr&&item.time)taken.push(item.time)})
       })
-      if(taken.length >= 5) {
+      if(taken.length>=5){
         setBookedSlots([...ALL_TIMES])
       } else {
-        const preBlocked = getPreBlockedSlots(dateStr)
-        setBookedSlots([...new Set([...taken, ...preBlocked])])
+        const preBlocked=getPreBlockedSlots(dateStr)
+        setBookedSlots([...new Set([...taken,...preBlocked])])
       }
     } finally {
       setLoadingSlots(false)
@@ -912,7 +1119,7 @@ function Booking() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[selDate])
 
-  const canAdd=sel&&(later||(selDate&&selTime))
+  const canAdd=!!(sel&&(later||(selDate&&selTime)))
 
   const addItem=()=>{
     if(!sel)return
@@ -931,12 +1138,14 @@ function Booking() {
 
   const applyPromo=()=>{
     if(piInput.trim().toUpperCase()===PROMO){setPiApplied(true);setPiErr('')}
-    else setPiErr('Invalid code. Try FOUNDING')
+    else setPiErr('Invalid code — try FOUNDING')
   }
 
   const sub=cart.reduce((s,c)=>s+c.lesson.price.min*c.quantity,0)
   const hasEl=cart.some(c=>c.lesson.promoEligible)
-  const disc=piApplied&&hasEl?cart.filter(c=>c.lesson.promoEligible).reduce((s,c)=>s+c.lesson.price.min*c.quantity*PROMO_PCT,0):0
+  const disc=piApplied&&hasEl
+    ?cart.filter(c=>c.lesson.promoEligible).reduce((s,c)=>s+c.lesson.price.min*c.quantity*PROMO_PCT,0)
+    :0
   const total=sub-disc
 
   const checkout=async()=>{
@@ -964,181 +1173,287 @@ function Booking() {
 
   if(done) return (
     <section id="book" className="sec" style={{background:'var(--bg2)',textAlign:'center'}}>
-      <div style={{maxWidth:480,margin:'0 auto'}}>
+      <div style={{maxWidth:480,margin:'0 auto',padding:'40px 0'}}>
         <div style={{fontSize:52,marginBottom:28}}>⛳</div>
         <h2 className="hdg" style={{marginBottom:18}}>You're In.</h2>
-        <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)'}}>Booking confirmed. Check your email for details.</p>
+        <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',lineHeight:1.7}}>
+          Booking confirmed. Check your email — I'll be in touch to lock in the details.
+        </p>
       </div>
     </section>
   )
 
-  const IS:React.CSSProperties={width:'100%',padding:'12px 16px',background:'var(--bgc)',
-    border:'1px solid var(--bd)',color:'var(--t1)',fontFamily:"'DM Sans',sans-serif",fontSize:14,outline:'none'}
+  const IS:React.CSSProperties={
+    width:'100%',padding:'13px 16px',background:'var(--bgc)',
+    border:'1px solid var(--bd)',color:'var(--t1)',fontFamily:"'DM Sans',sans-serif",
+    fontSize:14,outline:'none',transition:'border-color .2s',
+  }
 
+  // Step label component — styled with circle number
   const SL=(n:string,txt:string)=>(
-    <div className="lbl" style={{marginBottom:22,display:'flex',alignItems:'center',gap:14}}>
-      <span>{n}</span>
-      <span style={{width:24,height:1,background:'var(--o7)',display:'inline-block'}}/>
-      <span>{txt}</span>
+    <div style={{marginBottom:24,display:'flex',alignItems:'center',gap:14}}>
+      <div style={{
+        width:30,height:30,borderRadius:'50%',flexShrink:0,
+        background:'rgba(197,152,62,.1)',border:'1px solid var(--o7)',
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontFamily:"'JetBrains Mono',monospace",fontSize:10,letterSpacing:'.08em',color:'var(--o5)',
+      }}>{n}</div>
+      <div style={{width:20,height:1,background:'rgba(107,76,16,.5)',flexShrink:0}}/>
+      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,letterSpacing:'.18em',
+        textTransform:'uppercase',color:'var(--o5)'}}>{txt}</span>
     </div>
   )
+
+  const availCount=ALL_TIMES.length-bookedSlots.length
 
   return (
     <section id="book" className="sec" style={{background:'var(--bg2)'}}>
       <div className="wrap">
+        {/* Header */}
         <div style={{marginBottom:56}}>
           <div className="lbl" style={{marginBottom:18}}>Book a Lesson</div>
           <h2 className="hdg">Let's Build Your<br/><em>Game.</em></h2>
         </div>
+
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(310px,1fr))',gap:56}}>
 
-          {/* ── LEFT ── */}
+          {/* ── LEFT COLUMN ── */}
           <div>
             {SL('01','Choose a Lesson')}
-            <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:sel?36:0}}>
-              {LESSONS.map(l=>(
-                <button key={l.id} onClick={()=>setSel(l.id===sel?.id?null:l)} style={{
-                  display:'flex',alignItems:'center',justifyContent:'space-between',
-                  padding:'16px 20px',
-                  background:sel?.id===l.id?'var(--bch)':'var(--bgc)',
-                  border:`1px solid ${sel?.id===l.id?'var(--ba)':'var(--bd)'}`,
-                  cursor:'pointer',transition:'all .2s',textAlign:'left',width:'100%',
-                }}>
-                  <div>
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,color:'var(--t1)',
-                      marginBottom:5,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-                      {l.title}
-                      {l.popular&&<span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,
-                        background:'var(--o5)',color:'var(--bg)',padding:'2px 7px',letterSpacing:'.1em',textTransform:'uppercase'}}>Popular</span>}
-                      {l.bestValue&&<span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,
-                        background:'var(--g7)',color:'var(--t1)',padding:'2px 7px',letterSpacing:'.1em',textTransform:'uppercase'}}>Best Value</span>}
+
+            {/* Lesson list */}
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:sel?40:0}}>
+              {LESSONS.map(l=>{
+                const isSelected=sel?.id===l.id
+                return (
+                  <button key={l.id} onClick={()=>setSel(isSelected?null:l)}
+                    className="lesson-row"
+                    style={{
+                      background:isSelected?'var(--bch)':'var(--bgc)',
+                      border:`1px solid ${isSelected?'var(--ba)':'var(--bd)'}`,
+                    }}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,
+                        color:'var(--t1)',marginBottom:6,
+                        display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',lineHeight:1.2}}>
+                        {l.title}
+                        {l.popular&&(
+                          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,
+                            background:'var(--o5)',color:'var(--bg)',padding:'2px 7px',
+                            letterSpacing:'.1em',textTransform:'uppercase',flexShrink:0}}>Popular</span>
+                        )}
+                        {l.bestValue&&(
+                          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,
+                            background:'var(--g7)',color:'var(--t1)',padding:'2px 7px',
+                            letterSpacing:'.1em',textTransform:'uppercase',flexShrink:0}}>Best Value</span>
+                        )}
+                      </div>
+                      <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>{l.duration}</div>
                     </div>
-                    <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>{l.duration}</div>
-                  </div>
-                  <div style={{textAlign:'right',flexShrink:0,marginLeft:16}}>
-                    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:30,fontWeight:300,color:'var(--t1)',lineHeight:1}}>${l.price.min}</div>
-                    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)'}}>–${l.price.max}</div>
-                  </div>
-                </button>
-              ))}
+                    <div style={{textAlign:'right',flexShrink:0,marginLeft:16}}>
+                      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:30,fontWeight:300,
+                        color:isSelected?'var(--o3)':'var(--t1)',lineHeight:1,transition:'color .2s'}}>
+                        ${l.price.min}
+                      </div>
+                      <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',marginTop:2}}>
+                        –${l.price.max}
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
 
+            {/* Step 2 — Date & Time (only when lesson selected) */}
             {sel&&(
-              <div>
-                {SL('02','Pick a Time')}
-                <label style={{display:'flex',alignItems:'center',gap:12,cursor:'pointer',
-                  marginBottom:28,fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t2)'}}>
-                  <input type="checkbox" checked={later} onChange={e=>setLater(e.target.checked)}/>
-                  I'll schedule after purchase
-                </label>
-                {!later&&(
-                  <>
-                    <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:12}}>Select Date</div>
-                    <div className="ns" style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:8,marginBottom:24}}>
-                      {dates.map((date,i)=>{
-                        const s=selDate?.toDateString()===date.toDateString()
-                        return (
-                          <button key={i} onClick={()=>{setSelDate(date)}} style={{
-                            flexShrink:0,padding:'10px 12px',textAlign:'center',cursor:'pointer',
-                            background:s?'var(--o5)':'var(--bgc)',
-                            border:`1px solid ${s?'var(--o5)':'var(--bd)'}`,
-                            color:s?'var(--bg)':'var(--t1)',transition:'all .2s',
-                          }}>
-                            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:2}}>
-                              {date.toLocaleDateString('en-US',{weekday:'short'})}
-                            </div>
-                            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,lineHeight:1}}>{date.getDate()}</div>
-                            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,letterSpacing:'.08em',marginTop:2}}>
-                              {date.toLocaleDateString('en-US',{month:'short'})}
-                            </div>
-                          </button>
-                        )
-                      })}
+              <div style={{animation:'kpFU .4s ease-out forwards'}}>
+                <div style={{borderTop:'1px solid var(--bd)',paddingTop:36,marginTop:8}}>
+                  {SL('02','Schedule')}
+
+                  {/* Schedule later checkbox */}
+                  <label style={{
+                    display:'flex',alignItems:'center',gap:12,cursor:'pointer',
+                    marginBottom:28,fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t2)',
+                    padding:'12px 16px',background:'var(--bgc)',border:'1px solid var(--bd)',
+                    transition:'border-color .2s',
+                    ...(later?{borderColor:'rgba(255,255,255,.15)'}:{}),
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={later}
+                      onChange={e=>{setLater(e.target.checked);if(e.target.checked){setSelDate(null);setSelTime(null)}}}
+                      style={{width:16,height:16,flexShrink:0}}
+                    />
+                    <div>
+                      <div style={{color:'var(--t1)',fontWeight:500,fontSize:14}}>Schedule after purchase</div>
+                      <div style={{fontSize:12,color:'var(--t3)',marginTop:2}}>I'll confirm a time via email</div>
                     </div>
+                  </label>
 
-                    {selDate&&loadingSlots&&(
-                      <div style={{display:'flex',justifyContent:'center',padding:20}}>
-                        <div style={{
-                          width:20,height:20,borderRadius:'50%',
-                          border:'2px solid var(--bd)',
-                          borderTopColor:'var(--o5)',
-                          animation:'kpSpin .7s linear infinite',
-                        }}/>
+                  {!later&&(
+                    <>
+                      {/* Date strip */}
+                      <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:10}}>Select Date</div>
+                      <div className="ns" style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:8,marginBottom:24}}>
+                        {dates.map((date,i)=>{
+                          const s=selDate?.toDateString()===date.toDateString()
+                          return (
+                            <button key={i} className="date-btn" onClick={()=>setSelDate(date)} style={{
+                              background:s?'var(--o5)':'var(--bgc)',
+                              border:`1px solid ${s?'var(--o5)':'var(--bd)'}`,
+                              color:s?'var(--bg)':'var(--t1)',
+                            }}>
+                              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,
+                                letterSpacing:'.08em',textTransform:'uppercase',marginBottom:3,opacity:.8}}>
+                                {date.toLocaleDateString('en-US',{weekday:'short'})}
+                              </div>
+                              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,lineHeight:1,fontWeight:400}}>
+                                {date.getDate()}
+                              </div>
+                              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,
+                                letterSpacing:'.06em',marginTop:3,opacity:.7}}>
+                                {date.toLocaleDateString('en-US',{month:'short'})}
+                              </div>
+                            </button>
+                          )
+                        })}
                       </div>
-                    )}
 
-                    {selDate&&!loadingSlots&&(
-                      <>
-                        <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:12}}>Select Time</div>
-                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(96px,1fr))',gap:8,marginBottom:24}}>
-                          {ALL_TIMES.map(time=>{
-                            const isBooked=bookedSlots.includes(time)
-                            const isSelected=selTime===time
-                            return (
-                              <button key={time} disabled={isBooked} onClick={()=>setSelTime(time)} style={{
-                                padding:'10px 6px',fontFamily:"'JetBrains Mono',monospace",fontSize:11,
-                                background:isSelected?'var(--o5)':isBooked?'rgba(0,0,0,.15)':'rgba(61,138,82,.1)',
-                                border:`1px solid ${isSelected?'var(--o5)':isBooked?'var(--bd)':'rgba(61,138,82,.28)'}`,
-                                color:isSelected?'var(--bg)':isBooked?'var(--t3)':'var(--t1)',
-                                cursor:isBooked?'not-allowed':'pointer',
-                                opacity:isBooked?.45:1,
-                                textDecoration:isBooked?'line-through':'none',
-                                transition:'all .2s',
-                              }}>{time}</button>
-                            )
-                          })}
+                      {/* Loading */}
+                      {selDate&&loadingSlots&&(
+                        <div style={{display:'flex',justifyContent:'center',padding:24}}>
+                          <div style={{
+                            width:20,height:20,borderRadius:'50%',
+                            border:'2px solid var(--bd)',borderTopColor:'var(--o5)',
+                            animation:'kpSpin .7s linear infinite',
+                          }}/>
                         </div>
-                      </>
-                    )}
-                  </>
-                )}
-                <button onClick={addItem} className="btn-g" disabled={!canAdd}
-                  style={{width:'100%',justifyContent:'center'}}>
-                  Add to Cart
-                </button>
+                      )}
+
+                      {/* Time grid */}
+                      {selDate&&!loadingSlots&&(
+                        <>
+                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+                            <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>Select Time</div>
+                            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                              color:'var(--g4)',letterSpacing:'.1em'}}>
+                              {availCount} slot{availCount!==1?'s':''} open
+                            </div>
+                          </div>
+                          <div style={{
+                            display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(94px,1fr))',
+                            gap:7,marginBottom:24,
+                          }}>
+                            {ALL_TIMES.map(time=>{
+                              const isBooked=bookedSlots.includes(time)
+                              const isSelected=selTime===time
+                              return (
+                                <button key={time} disabled={isBooked} onClick={()=>setSelTime(time)}
+                                  className="time-btn" style={{
+                                  background:isSelected?'var(--o5)':isBooked?'rgba(0,0,0,.15)':'rgba(61,138,82,.08)',
+                                  border:`1px solid ${isSelected?'var(--o5)':isBooked?'rgba(255,255,255,.04)':'rgba(61,138,82,.22)'}`,
+                                  color:isSelected?'var(--bg)':isBooked?'rgba(80,96,86,.35)':'var(--t1)',
+                                  opacity:isBooked?.5:1,
+                                  textDecoration:isBooked?'line-through':'none',
+                                  letterSpacing:'.08em',
+                                }}>
+                                  {time}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {/* Add to cart */}
+                  <button onClick={addItem} className="btn-g" disabled={!canAdd}
+                    style={{width:'100%',justifyContent:'center',marginTop:8}}>
+                    {canAdd?'Add to Cart':'Select Date & Time to Continue'}
+                  </button>
+                  {!canAdd&&!later&&(
+                    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',
+                      textAlign:'center',marginTop:10,letterSpacing:'.1em'}}>
+                      {!selDate?'Pick a date first':'Pick a time to continue'}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          {/* ── RIGHT ── */}
+          {/* ── RIGHT COLUMN ── */}
           <div>
             {SL('03',`Cart (${cart.reduce((s,c)=>s+c.quantity,0)})`)}
 
+            {/* Empty state */}
             {cart.length===0?(
-              <div style={{padding:'44px 24px',textAlign:'center',background:'var(--bgc)',border:'1px solid var(--bd)',
-                fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t3)'}}>
-                No lessons added yet.<br/><span style={{fontSize:12,opacity:.6}}>Select one on the left ←</span>
+              <div style={{
+                padding:'52px 28px',textAlign:'center',
+                background:'var(--bgc)',border:'1px dashed rgba(255,255,255,.07)',
+                display:'flex',flexDirection:'column',alignItems:'center',gap:14,
+              }}>
+                <div style={{fontSize:32,opacity:.35}}>⛳</div>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,
+                  color:'var(--t2)',fontStyle:'italic',lineHeight:1.2}}>
+                  Your cart is empty
+                </div>
+                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                  letterSpacing:'.14em',textTransform:'uppercase',color:'var(--t4)'}}>
+                  Select a lesson on the left to get started
+                </div>
               </div>
             ):(
-              <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
                 {cart.map(item=>(
-                  <div key={item.lesson.id} style={{padding:'16px 20px',background:'var(--bgc)',border:'1px solid var(--bd)'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+                  <div key={item.lesson.id} style={{
+                    padding:'18px 20px',background:'var(--bgc)',border:'1px solid var(--bd)',
+                    transition:'border-color .2s',
+                  }}>
+                    {/* Item header */}
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
                       <div>
-                        <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,color:'var(--t1)',marginBottom:4}}>{item.lesson.title}</div>
+                        <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,
+                          color:'var(--t1)',marginBottom:5}}>{item.lesson.title}</div>
                         {item.date?(
-                          <div className="lbl" style={{fontSize:9,color:'var(--o5)'}}>{item.date}{item.time&&` @ ${item.time}`}</div>
+                          <div className="lbl" style={{fontSize:9,color:'var(--o5)'}}>
+                            {item.date}{item.time&&` · ${item.time}`}
+                          </div>
                         ):(
-                          <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>Schedule TBD</div>
+                          <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>
+                            Schedule TBD via email
+                          </div>
                         )}
                       </div>
-                      <button onClick={()=>rmItem(item.lesson.id)} style={{background:'none',border:'none',cursor:'pointer',
-                        color:'var(--t3)',fontSize:20,lineHeight:1,padding:'0 4px',transition:'color .2s'}}
+                      <button
+                        onClick={()=>rmItem(item.lesson.id)}
+                        aria-label={`Remove ${item.lesson.title}`}
+                        style={{
+                          background:'none',border:'none',cursor:'pointer',color:'var(--t4)',
+                          fontSize:20,lineHeight:1,padding:'0 4px',transition:'color .2s',marginLeft:12,
+                        }}
                         onMouseEnter={e=>(e.currentTarget.style.color='var(--t1)')}
-                        onMouseLeave={e=>(e.currentTarget.style.color='var(--t3)')}>×</button>
+                        onMouseLeave={e=>(e.currentTarget.style.color='var(--t4)')}>×</button>
                     </div>
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                      <div style={{display:'flex',alignItems:'center',gap:14}}>
-                        {([[-1,'−'],[1,'+']] as [number,string][]).map(([d,ic])=>(
-                          <button key={ic} onClick={()=>qty(item.lesson.id,d)} style={{
-                            width:30,height:30,background:'var(--bg)',border:'1px solid var(--bd)',
-                            cursor:'pointer',color:'var(--t1)',fontSize:18,
-                            display:'flex',alignItems:'center',justifyContent:'center',
-                          }}>{ic}</button>
-                        ))}
-                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14}}>{item.quantity}</span>
+
+                    {/* Qty + Price */}
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
+                      borderTop:'1px solid rgba(255,255,255,.04)',paddingTop:12}}>
+                      <div style={{display:'flex',alignItems:'center',gap:4}}>
+                        <button className="qty-btn" onClick={()=>qty(item.lesson.id,-1)}
+                          aria-label="Decrease quantity"
+                          style={{background:'rgba(255,255,255,.04)',border:'1px solid var(--bd)',
+                            color:'var(--t1)',borderRadius:2}}>−</button>
+                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,
+                          minWidth:28,textAlign:'center'}}>{item.quantity}</span>
+                        <button className="qty-btn" onClick={()=>qty(item.lesson.id,1)}
+                          aria-label="Increase quantity"
+                          style={{background:'rgba(255,255,255,.04)',border:'1px solid var(--bd)',
+                            color:'var(--t1)',borderRadius:2}}>+</button>
                       </div>
-                      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:300,color:'var(--t1)'}}>
+                      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,
+                        fontWeight:300,color:'var(--t1)'}}>
                         ${(item.lesson.price.min*item.quantity).toFixed(2)}
                       </div>
                     </div>
@@ -1149,74 +1464,121 @@ function Booking() {
 
             {cart.length>0&&(
               <>
-                {/* Promo */}
-                <div style={{marginTop:16}}>
+                {/* Promo code */}
+                <div style={{marginTop:14}}>
                   <div style={{display:'flex',gap:8}}>
-                    <input value={piInput} onChange={e=>{setPiInput(e.target.value);setPiErr('')}}
+                    <input
+                      value={piInput}
+                      onChange={e=>{setPiInput(e.target.value);setPiErr('')}}
                       placeholder="Promo code (try FOUNDING)"
-                      style={{...IS,flex:1,fontFamily:"'JetBrains Mono',monospace",fontSize:12,
-                        textTransform:'uppercase',letterSpacing:'.1em'}}
+                      style={{
+                        ...IS,flex:1,fontFamily:"'JetBrains Mono',monospace",
+                        fontSize:12,textTransform:'uppercase',letterSpacing:'.1em',
+                      }}
                       onFocus={e=>(e.target.style.borderColor='var(--o7)')}
-                      onBlur={e=>(e.target.style.borderColor='var(--bd)')}/>
-                    <button onClick={applyPromo} className="btn-w" style={{padding:'10px 16px',fontSize:12}}>Apply</button>
+                      onBlur={e=>(e.target.style.borderColor='var(--bd)')}
+                    />
+                    <button onClick={applyPromo} className="btn-w" style={{padding:'10px 18px',fontSize:11,flexShrink:0}}>
+                      Apply
+                    </button>
                   </div>
-                  {piErr&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:'#e05555',marginTop:6}}>{piErr}</div>}
-                  {piApplied&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:'var(--g4)',marginTop:6}}>✓ 20% founding member discount applied to packs</div>}
+                  {piErr&&(
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:'#e07070',marginTop:7}}>
+                      {piErr}
+                    </div>
+                  )}
+                  {piApplied&&(
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:'var(--g4)',marginTop:7,
+                      display:'flex',alignItems:'center',gap:6}}>
+                      <span>✓</span> 20% founding member discount applied to packs
+                    </div>
+                  )}
                 </div>
 
-                {/* Totals */}
-                <div style={{marginTop:16,padding:20,background:'var(--bgc)',border:'1px solid var(--bd)'}}>
-                  {[
-                    ['Subtotal',`$${sub.toFixed(2)}`,false],
-                    ...(disc>0?[[`Founding Discount (20%)`,`-$${disc.toFixed(2)}`,true]]:[] as [string,string,boolean][]),
-                    ['Total',`$${total.toFixed(2)}`,false],
-                  ].map(([lbl,val,isDisc],i,arr)=>(
-                    <div key={String(lbl)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',
-                      padding:i===arr.length-1?'16px 0 0':'8px 0',
-                      borderTop:i===arr.length-1?'1px solid var(--bd)':'none',
-                      marginTop:i===arr.length-1?8:0}}>
-                      <span style={{fontFamily:"'DM Sans',sans-serif",
-                        fontSize:i===arr.length-1?15:13,fontWeight:i===arr.length-1?600:400,
-                        color:isDisc?'var(--g4)':'var(--t2)'}}>{lbl}</span>
-                      <span style={{fontFamily:"'Cormorant Garamond',serif",
-                        fontSize:i===arr.length-1?28:20,fontWeight:300,color:'var(--t1)'}}>{val}</span>
+                {/* Order summary */}
+                <div style={{marginTop:12,padding:'20px 20px',background:'var(--bgc)',border:'1px solid var(--bd)'}}>
+                  {([
+                    {lbl:'Subtotal',val:`$${sub.toFixed(2)}`,disc:false,big:false},
+                    ...(disc>0?[{lbl:`20% Founding Discount`,val:`-$${disc.toFixed(2)}`,disc:true,big:false}]:[]),
+                    {lbl:'Total',val:`$${total.toFixed(2)}`,disc:false,big:true},
+                  ] as {lbl:string;val:string;disc:boolean;big:boolean}[]).map((row,i,arr)=>(
+                    <div key={row.lbl} style={{
+                      display:'flex',justifyContent:'space-between',alignItems:'center',
+                      padding:row.big?'14px 0 0':'7px 0',
+                      borderTop:row.big?'1px solid var(--bd)':'none',
+                      marginTop:row.big?10:0,
+                    }}>
+                      <span style={{
+                        fontFamily:"'DM Sans',sans-serif",
+                        fontSize:row.big?15:13,fontWeight:row.big?600:400,
+                        color:row.disc?'var(--g4)':'var(--t2)',
+                      }}>{row.lbl}</span>
+                      <span style={{
+                        fontFamily:"'Cormorant Garamond',serif",
+                        fontSize:row.big?30:20,fontWeight:300,
+                        color:row.disc?'var(--g4)':'var(--t1)',
+                      }}>{row.val}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Contact */}
+                {/* Contact details */}
                 <div style={{marginTop:36}}>
-                  {SL('04','Your Info')}
-                  <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                  <div style={{borderTop:'1px solid var(--bd)',paddingTop:28,marginBottom:24}}>
+                    {SL('04','Your Info')}
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:14}}>
                     {[
                       {k:'name',lbl:'Full Name *',ph:'John Smith',t:'text'},
-                      {k:'email',lbl:'Email *',ph:'john@example.com',t:'email'},
-                      {k:'phone',lbl:'Phone',ph:'(609) 555-0123',t:'tel'},
+                      {k:'email',lbl:'Email Address *',ph:'john@example.com',t:'email'},
+                      {k:'phone',lbl:'Phone Number',ph:'(609) 555-0123',t:'tel'},
                     ].map(f=>(
                       <div key={f.k}>
-                        <div className="lbl" style={{fontSize:9,color:'var(--t3)',display:'block',marginBottom:8}}>{f.lbl}</div>
-                        <input type={f.t} placeholder={f.ph}
+                        <div style={{
+                          fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+                          textTransform:'uppercase',color:'var(--t3)',display:'block',marginBottom:8,
+                        }}>{f.lbl}</div>
+                        <input
+                          type={f.t}
+                          placeholder={f.ph}
                           value={form[f.k as keyof BForm]}
                           onChange={e=>setForm({...form,[f.k]:e.target.value})}
                           style={IS}
                           onFocus={e=>(e.target.style.borderColor='var(--o7)')}
-                          onBlur={e=>(e.target.style.borderColor='var(--bd)')}/>
+                          onBlur={e=>(e.target.style.borderColor='var(--bd)')}
+                        />
                       </div>
                     ))}
                     <div>
-                      <div className="lbl" style={{fontSize:9,color:'var(--t3)',display:'block',marginBottom:8}}>Message (optional)</div>
-                      <textarea placeholder="Anything I should know before our first session?" rows={3}
-                        value={form.message} onChange={e=>setForm({...form,message:e.target.value})}
+                      <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+                        textTransform:'uppercase',color:'var(--t3)',display:'block',marginBottom:8}}>
+                        Message (optional)
+                      </div>
+                      <textarea
+                        placeholder="Anything I should know before our first session? Goals, experience level, injuries…"
+                        rows={3}
+                        value={form.message}
+                        onChange={e=>setForm({...form,message:e.target.value})}
                         style={{...IS,resize:'vertical'}}
                         onFocus={e=>(e.target.style.borderColor='var(--o7)')}
-                        onBlur={e=>(e.target.style.borderColor='var(--bd)')}/>
+                        onBlur={e=>(e.target.style.borderColor='var(--bd)')}
+                      />
                     </div>
                   </div>
-                  {fErr&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'#e05555',marginTop:12}}>{fErr}</div>}
-                  <button onClick={checkout} className="btn-g" style={{width:'100%',justifyContent:'center',marginTop:20,padding:'16px 24px'}}>
-                    Confirm &amp; Pay ${total.toFixed(2)} →
+
+                  {fErr&&(
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'#e07070',marginTop:12}}>
+                      {fErr}
+                    </div>
+                  )}
+
+                  <button onClick={checkout} className="btn-g" style={{
+                    width:'100%',justifyContent:'center',marginTop:20,padding:'17px 24px',fontSize:11,
+                  }}>
+                    Confirm &amp; Pay — ${total.toFixed(2)} →
                   </button>
-                  <div className="lbl" style={{fontSize:9,color:'var(--t3)',textAlign:'center',marginTop:12,letterSpacing:'.12em'}}>
+                  <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t4)',
+                    textAlign:'center',marginTop:10,letterSpacing:'.12em'}}>
                     Secure checkout via Stripe
                   </div>
                 </div>
@@ -1241,35 +1603,46 @@ function FAQ() {
           <div className="lbl" style={{marginBottom:18}}>FAQ</div>
           <h2 className="hdg">Got Questions?<br/><em>Good.</em></h2>
         </div>
-        <div style={{display:'flex',flexDirection:'column',gap:2}}>
+
+        <div style={{display:'flex',flexDirection:'column',gap:3}}>
           {FAQS.map((f,i)=>(
-            <div key={i} style={{background:'var(--bgc)',
+            <div key={i} style={{
+              background:'var(--bgc)',
               border:`1px solid ${open===i?'var(--ba)':'var(--bd)'}`,
-              transition:'border-color .3s'}}>
+              transition:'border-color .3s ease',
+            }}>
               <button onClick={()=>setOpen(open===i?null:i)} style={{
-                width:'100%',padding:'24px 28px',display:'flex',alignItems:'center',
+                width:'100%',padding:'22px 26px',display:'flex',alignItems:'flex-start',
                 justifyContent:'space-between',background:'none',border:'none',
                 cursor:'pointer',textAlign:'left',gap:24,
               }}>
                 <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:400,
-                  color:'var(--t1)',lineHeight:1.2}}>{f.q}</span>
-                <span style={{fontSize:24,color:'var(--o5)',flexShrink:0,lineHeight:1,
-                  transform:open===i?'rotate(45deg)':'none',transition:'transform .3s'
+                  color:'var(--t1)',lineHeight:1.25}}>
+                  {f.q}
+                </span>
+                <span style={{
+                  fontSize:22,color:'var(--o5)',flexShrink:0,lineHeight:1,marginTop:2,
+                  transform:open===i?'rotate(45deg)':'none',
+                  transition:'transform .3s ease',display:'inline-block',
                 }}>+</span>
               </button>
               <div className={`acc${open===i?' open':''}`}>
                 <div>
-                  <div style={{padding:'0 28px 24px',fontFamily:"'DM Sans',sans-serif",
-                    fontSize:15,lineHeight:1.8,color:'var(--t2)'}}>{f.a}</div>
+                  <div style={{
+                    padding:'0 26px 24px',fontFamily:"'DM Sans',sans-serif",
+                    fontSize:15,lineHeight:1.8,color:'var(--t2)',
+                  }}>{f.a}</div>
                 </div>
               </div>
             </div>
           ))}
         </div>
-        <div style={{marginTop:48,padding:40,textAlign:'center',background:'var(--bgc)',border:'1px solid var(--bd)'}}>
-          <div className="lbl" style={{marginBottom:16}}>Still have questions?</div>
-          <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',marginBottom:24}}>
-            Reach out directly — no bots, no wait.
+
+        <div style={{marginTop:52,padding:'36px 40px',textAlign:'center',
+          background:'var(--bgc)',border:'1px solid var(--bd)'}}>
+          <div className="lbl" style={{marginBottom:14}}>Still have questions?</div>
+          <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',marginBottom:24,lineHeight:1.65}}>
+            Reach out directly — no bots, no wait time.
           </p>
           <a href="mailto:kpgolftraining@gmail.com" className="btn-w">Email KP Directly</a>
         </div>
@@ -1285,55 +1658,81 @@ function Footer() {
   const yr=new Date().getFullYear()
   const go=(h:string)=>document.querySelector(h)?.scrollIntoView({behavior:'smooth'})
   return (
-    <footer style={{background:'var(--bg2)',borderTop:'1px solid var(--bd)',
-      padding:'clamp(64px,8vw,96px) clamp(20px,4vw,40px) 32px'}}>
+    <footer style={{
+      background:'var(--bg2)',borderTop:'1px solid var(--bd)',
+      padding:'clamp(64px,8vw,96px) clamp(20px,4vw,40px) 32px',
+    }}>
       <div className="wrap">
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:48,marginBottom:64}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:52,marginBottom:64}}>
+
+          {/* Brand */}
           <div>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:36,fontWeight:400,color:'var(--t1)',marginBottom:16}}>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:36,fontWeight:400,
+              color:'var(--t1)',marginBottom:16}}>
               KP<span style={{color:'var(--o5)'}}>.</span>
             </div>
-            <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.7,marginBottom:24,maxWidth:240}}>
+            <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',
+              lineHeight:1.75,marginBottom:24,maxWidth:240}}>
               Real golf lessons for real people. South Jersey's most affordable coaching — no judgment, no fluff.
             </p>
-            <div style={{display:'flex',gap:16}}>
-              {['IG','TT','YT'].map(p=>(
-                <a key={p} href="#" style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,letterSpacing:'.1em',
-                  color:'var(--t3)',textDecoration:'none',transition:'color .2s'}}
-                  onMouseEnter={e=>(e.currentTarget.style.color='var(--o5)')}
-                  onMouseLeave={e=>(e.currentTarget.style.color='var(--t3)')}>{p}</a>
-              ))}
+            {/* Social placeholder — clean, not broken */}
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',color:'var(--t4)',lineHeight:1.6}}>
+              @kpgolftraining<br/>
+              <span style={{color:'rgba(46,64,58,.7)'}}>socials coming soon</span>
             </div>
           </div>
+
+          {/* Nav */}
           <div>
-            <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:20}}>Navigation</div>
-            <div style={{display:'flex',flexDirection:'column',gap:12}}>
-              {[['About','#about'],['Videos','#videos'],['Pricing','#pricing'],['Book a Lesson','#book'],['FAQ','#faq']].map(([l,h])=>(
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.16em',
+              textTransform:'uppercase',color:'var(--t3)',marginBottom:20}}>Navigation</div>
+            <nav style={{display:'flex',flexDirection:'column',gap:12}}>
+              {[['About','#about'],['Swing Videos','#videos'],['Pricing','#pricing'],['Book a Lesson','#book'],['FAQ','#faq']].map(([l,h])=>(
                 <button key={h} onClick={()=>go(h)} style={{
                   fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t2)',
-                  background:'none',border:'none',cursor:'pointer',textAlign:'left',padding:0,transition:'color .2s',
+                  background:'none',border:'none',cursor:'pointer',textAlign:'left',
+                  padding:0,transition:'color .2s',
                 }}
                 onMouseEnter={e=>(e.currentTarget.style.color='var(--t1)')}
                 onMouseLeave={e=>(e.currentTarget.style.color='var(--t2)')}>{l}</button>
               ))}
-            </div>
+            </nav>
           </div>
+
+          {/* Contact */}
           <div>
-            <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:20}}>Contact</div>
-            <div style={{display:'flex',flexDirection:'column',gap:18}}>
-              {[{lbl:'Email',val:'kpgolftraining@gmail.com'},{lbl:'Area',val:'South Jersey, NJ'}].map(c=>(
-                <div key={c.lbl}>
-                  <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:4}}>{c.lbl}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>{c.val}</div>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.16em',
+              textTransform:'uppercase',color:'var(--t3)',marginBottom:20}}>Contact</div>
+            <div style={{display:'flex',flexDirection:'column',gap:20}}>
+              <div>
+                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.12em',
+                  textTransform:'uppercase',color:'var(--t4)',marginBottom:6}}>Email</div>
+                <a href="mailto:kpgolftraining@gmail.com" style={{
+                  fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',
+                  textDecoration:'none',transition:'color .2s',
+                }}
+                onMouseEnter={e=>(e.currentTarget.style.color='var(--o5)')}
+                onMouseLeave={e=>(e.currentTarget.style.color='var(--t2)')}>
+                  kpgolftraining@gmail.com
+                </a>
+              </div>
+              <div>
+                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.12em',
+                  textTransform:'uppercase',color:'var(--t4)',marginBottom:6}}>Area</div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
+                  South Jersey, NJ
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Bottom bar */}
         <div style={{borderTop:'1px solid var(--bd)',paddingTop:24,
           display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:16}}>
           <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,letterSpacing:'.1em',
-            textTransform:'uppercase',color:'var(--t3)'}}>
+            textTransform:'uppercase',color:'var(--t4)'}}>
             © {yr} KP Golf Training. All rights reserved.
           </div>
           <div style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:14,color:'var(--t3)'}}>
@@ -1352,7 +1751,7 @@ export default function Page() {
   const [mounted,setMounted]=useState(false)
   const [entered,setEntered]=useState(false)
 
-  useEffect(()=>{ setMounted(true) },[])
+  useEffect(()=>{setMounted(true)},[])
 
   if(!mounted) return (
     <div style={{background:'#070f0a',minHeight:'100vh'}}>
