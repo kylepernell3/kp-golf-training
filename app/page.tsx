@@ -15,32 +15,6 @@ const supabasePublic = createClient(
 // ─────────────────────────────────────────────────────────────────────────────
 const ALL_TIMES = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM']
 
-// Real Supabase availability hook — replaces fake getPreBlockedSlots
-function useBookedSlots(dateStr: string | null) {
-  const [bookedSlots, setBookedSlots] = useState<string[]>([])
-  const [slotsLoading, setSlotsLoading] = useState(false)
-
-  useEffect(() => {
-    if (!dateStr) { setBookedSlots([]); return }
-    let cancelled = false
-    setSlotsLoading(true)
-    supabasePublic
-      .from('bookings')
-      .select('booked_time')
-      .eq('booked_date', dateStr)
-      .in('status', ['pending', 'confirmed'])
-      .then(({ data, error }) => {
-        if (cancelled) return
-        if (error) { console.error('Availability fetch error:', error); setBookedSlots([]); }
-        else { setBookedSlots((data ?? []).map((r: any) => r.booked_time).filter(Boolean)) }
-        setSlotsLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [dateStr])
-
-  return { bookedSlots, slotsLoading }
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // GLOBAL CSS
 // ─────────────────────────────────────────────────────────────────────────────
