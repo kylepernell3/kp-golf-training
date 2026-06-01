@@ -3,9 +3,22 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-// Promo code constant - must match PROMO in page.tsx
+// Must match PROMO / PROMO_PCT constants in page.tsx
 const PROMO_CODE = 'FOUNDING';
 const PROMO_DISCOUNT = 0.20;
+
+// CartItem shape sent from page.tsx
+interface CartItem {
+  lesson: {
+    id: string;
+    title: string;
+    price: { min: number; max: number };
+    promoEligible?: boolean;
+  };
+  quantity: number;
+  date?: string;
+  time?: string;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,24 +31,31 @@ export async function POST(req: NextRequest) {
       bookedDate,
       bookedTime,
       promoApplied,
+    }: {
+      items: CartItem[];
+      customerEmail?: string;
+      customerName?: string;
+      promoCode?: string;
+      bookedDate?: string;
+      bookedTime?: string;
+      promoApplied?: boolean;
     } = body;
 
-    // Support both promoCode string check and promoApplied boolean
     const isPromo =
       promoApplied === true ||
       (typeof promoCode === 'string' &&
         promoCode.toUpperCase() === PROMO_CODE);
-    const discountMultiplier = isPromo ? 1 - PROMO_DISCOUNT : 1;
 
-    // Calculate total in cents
+    // Sum prices using lesson.price.min (the sale/current price)
     const amount = Math.round(
-      items.reduce(
-        (sum: number, item: { price: number; quantity: number }) =>
-          sum + item.price * item.quantity,
-        0
-      ) *
-        discountMultiplier *
-        100
+      items.reduce((sum, item) => {
+        const unitPrice = item.lesson.price.min;
+        const discount =
+          isPromo && item.lesson.promoEligible !== false
+            ? 1 - PROMO_DISCOUNT
+            : 1;
+        return sum + unitPrice * item.quantity * discount;
+      }, 0) * 100
     );
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -45,10 +65,18 @@ export async function POST(req: NextRequest) {
       metadata: {
         customerName: customerName || '',
         customerEmail: customerEmail || '',
-        bookedDate: bookedDate || '',
-        bookedTime: bookedTime || '',
+        bookedDate: bookedDate || (items[0]?.date ?? ''),
+        bookedTime: bookedTime || (items[0]?.time ?? ''),
         promoCode: promoCode || '',
-        items: JSON.stringify(items),
+        items: JSON.stringify(
+          items.map((i) => ({
+            id: i.lesson.id,
+            title: i.lesson.title,
+            qty: i.quantity,
+            date: i.date,
+            time: i.time,
+          }))
+        ),
       },
     });
 
