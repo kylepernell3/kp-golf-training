@@ -197,7 +197,6 @@ const ICAPS = [
   '14th Teeshot',
 ]
 
-// Contextual subtitles — used where a caption needs more story
 const ICAP_SUBS: (string|null)[] = [
   null, null, null, null, null, null, null, null, null,
   'Caddied for a Pine Valley member — 6× NBA Champion',
@@ -268,7 +267,7 @@ const PILLARS=[
    body:"Weekend warriors, beginners, juniors. My pricing is built for real golfers — not golf academies. You don't need a trust fund to play better golf."},
 ]
 
-const PROMO='FOUNDING', PROMO_PCT=0.2, SPOTS=9
+const PROMO='FOUNDING', PROMO_PCT=0.2
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOOKS
@@ -373,7 +372,8 @@ function Navbar() {
   return (
     <>
       <nav style={{
-        position:'fixed',top:0,left:0,right:0,zIndex:200,height:68,padding:'0 clamp(20px,3vw,36px)',
+        position:'fixed',top:0,left:0,right:0,zIndex:200,height:68,
+        padding:'0 clamp(20px,3vw,36px)',
         display:'flex',alignItems:'center',justifyContent:'space-between',
         background:scrolled?'rgba(7,15,10,.94)':'transparent',
         backdropFilter:scrolled?'blur(14px)':'none',
@@ -391,7 +391,7 @@ function Navbar() {
         </button>
 
         {/* Desktop */}
-        <div className="nd" style={{alignItems:'center',gap:40}}>
+        <div className="nd" style={{alignItems:'center',gap:36}}>
           {NAV.map(l=>(
             <button key={l.h} onClick={()=>go(l.h)} style={lb}
               onMouseEnter={e=>(e.currentTarget.style.color='#ede8dc')}
@@ -427,7 +427,7 @@ function Navbar() {
           position:'fixed',top:68,left:0,right:0,zIndex:199,
           background:'rgba(7,15,10,.97)',backdropFilter:'blur(20px)',
           borderBottom:'1px solid rgba(255,255,255,.07)',
-          padding:'32px 28px 48px',display:'flex',flexDirection:'column',gap:6,
+          padding:'28px 28px 44px',display:'flex',flexDirection:'column',gap:4,
           transform:open?'translateY(0)':'translateY(-110%)',
           transition:'transform .36s cubic-bezier(.4,0,.2,1)',
           pointerEvents:open?'auto':'none',
@@ -552,7 +552,7 @@ function Hero() {
 
           {/* CTAs */}
           <div style={{display:'flex',gap:14,flexWrap:'wrap',marginBottom:68}}>
-            <button onClick={()=>go('#book')} className="btn-g">Book Your First Lesson</button>
+            <button onClick={()=>go('#book')} className="btn-g">Book a Lesson</button>
             <button onClick={()=>go('#videos')} className="btn-w">Watch Swing Videos ↓</button>
           </div>
 
@@ -590,8 +590,6 @@ function Hero() {
     </section>
   )
 }
-
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARQUEES
@@ -883,7 +881,7 @@ function Pricing() {
   function Card({lesson,idx}:{lesson:Lesson;idx:number}) {
     return (
       <div className="kcard" style={{
-        padding:'28px 26px 26px',position:'relative',overflow:'hidden',
+        padding:'28px 24px 24px',position:'relative',overflow:'hidden',
         display:'flex',flexDirection:'column',
         opacity:inView?1:0,
         transform:inView?'none':'translateY(36px)',
@@ -891,7 +889,7 @@ function Pricing() {
         ...(lesson.popular?{border:'1px solid var(--ba)'}:{}),
       }}>
         {/* Badge row */}
-        <div style={{display:'flex',gap:7,marginBottom:20,flexWrap:'wrap',minHeight:24,alignItems:'center'}}>
+        <div style={{display:'flex',gap:7,marginBottom:18,flexWrap:'wrap',minHeight:24,alignItems:'center'}}>
           {lesson.popular&&(
             <span style={{
               fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
@@ -913,20 +911,47 @@ function Pricing() {
           )}
         </div>
 
-        {/* Title */}
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:14,color:'var(--t1)',marginBottom:4}}>{lesson.title}</div>
+        {/* Title & duration */}
+        <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:14,color:'var(--t1)',marginBottom:4}}>
+          {lesson.title}
+        </div>
         <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:20}}>{lesson.duration}</div>
 
-        {/* Price */}
-        <div style={{display:'flex',alignItems:'baseline',gap:4,marginBottom:4}}>
-          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:52,fontWeight:300,color:'var(--t1)',lineHeight:1}}>
-            ${lesson.price.min}
-          </span>
-          <span style={{color:'var(--t3)',fontSize:15}}>– {lesson.price.max}</span>
+        {/* ── PRICE BLOCK: current price + compare-at ── */}
+        <div style={{marginBottom:lesson.sessions?6:20}}>
+          <div style={{
+            fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+            textTransform:'uppercase',color:'var(--o5)',opacity:.65,marginBottom:7,
+          }}>Now</div>
+          <div style={{display:'flex',alignItems:'center',gap:14}}>
+            <span style={{
+              fontFamily:"'Cormorant Garamond',serif",fontSize:52,fontWeight:300,
+              color:'var(--t1)',lineHeight:1,
+            }}>
+              ${lesson.price.min}
+            </span>
+            <div style={{display:'flex',flexDirection:'column',gap:4,paddingBottom:2}}>
+              <span style={{
+                fontFamily:"'JetBrains Mono',monospace",fontSize:8,letterSpacing:'.1em',
+                textTransform:'uppercase',color:'var(--t4)',
+              }}>Regular</span>
+              <span style={{
+                fontFamily:"'DM Sans',sans-serif",fontSize:14,
+                color:'var(--t3)',textDecoration:'line-through',opacity:.6,
+              }}>
+                ${lesson.price.max}
+              </span>
+            </div>
+          </div>
         </div>
+
+        {/* Per-session line for packs */}
         {lesson.sessions&&(
-          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',marginBottom:12}}>
-            ~${Math.round(lesson.price.min/lesson.sessions)}–{Math.round(lesson.price.max/lesson.sessions)} per session
+          <div style={{
+            fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',marginBottom:20,
+            letterSpacing:'.08em',
+          }}>
+            ~${Math.round(lesson.price.min/lesson.sessions)} per session
           </div>
         )}
 
@@ -934,7 +959,7 @@ function Pricing() {
           {lesson.description}
         </p>
 
-        <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:26}}>
+        <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
           {lesson.details.map((d,i)=>(
             <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',
               fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
@@ -959,7 +984,7 @@ function Pricing() {
           <h2 className="hdg">No Gimmicks.<br/><em>Just Lessons.</em></h2>
         </div>
 
-        {/* Promo banner */}
+        {/* ── FOUNDING MEMBER PROMO BANNER ── */}
         <div style={{
           background:'rgba(197,152,62,.06)',border:'1px solid var(--ba)',
           padding:'18px 24px',margin:'52px 0 40px',
@@ -967,11 +992,11 @@ function Pricing() {
         }}>
           <span style={{fontSize:18}}>🎯</span>
           <div>
-            <div className="lbl" style={{fontSize:10,marginBottom:4}}>
-              Founding Member Deal — Code: <strong style={{color:'var(--o3)'}}>FOUNDING</strong>
+            <div className="lbl" style={{fontSize:10,marginBottom:5}}>
+              Founding Member Pricing — Code: <strong style={{color:'var(--o3)'}}>FOUNDING</strong>
             </div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
-              20% off all lesson packs — {SPOTS} of 15 spots remaining
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.5}}>
+              20% off all lesson packs for founding members. Limited-time offer for early supporters.
             </div>
           </div>
         </div>
@@ -1019,7 +1044,6 @@ function HowItWorks() {
               transform:inView?'none':'translateY(28px)',
               transition:`opacity .65s ease ${i*.12}s,transform .65s ease ${i*.12}s`,
             }}>
-              {/* Icon circle */}
               <div style={{
                 width:80,height:80,borderRadius:'50%',
                 background:'var(--bgc)',border:'1px solid var(--o7)',
@@ -1053,7 +1077,7 @@ function HowItWorks() {
             First lesson starts at $39.99. No experience needed.
           </p>
           <button onClick={()=>document.querySelector('#book')?.scrollIntoView({behavior:'smooth'})}
-            className="btn-g">Book Your First Lesson</button>
+            className="btn-g">Book a Lesson</button>
         </div>
       </div>
     </section>
@@ -1102,7 +1126,6 @@ function Booking() {
     }
   }
 
-
   useEffect(()=>{
     if(!selDate)return
     const dateStr=fmtD(selDate)
@@ -1144,32 +1167,32 @@ function Booking() {
     if(!form.name||!form.email){setFErr('Name and email are required.');return}
     setFErr('')
 
-            const bookedDateStr = selDate ? fmtD(selDate) : null
-        const res = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: cart.map(c => ({
-              name: c.lesson.title,
-              description: c.lesson.description,
-              price: c.lesson.price.min,
-              quantity: c.quantity,
-            })),
-            customerEmail: form.email,
-            customerName: form.name,
-            promoCode: piApplied ? PROMO : undefined,
-            bookedDate: bookedDateStr,
-            bookedTime: selTime,
-          }),
-        })
-        if (!res.ok) {
-          const err = await res.json()
-          setFErr(err.error || 'Checkout failed. Please try again.')
-          return
-        }
-        const { url } = await res.json()
-        window.location.href = url
-
+    const bookedDateStr = selDate ? fmtD(selDate) : null
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: cart.map(c => ({
+          name: c.lesson.title,
+          description: c.lesson.description,
+          price: c.lesson.price.min,
+          quantity: c.quantity,
+        })),
+        customerEmail: form.email,
+        customerName: form.name,
+        promoCode: piApplied ? PROMO : undefined,
+        bookedDate: bookedDateStr,
+        bookedTime: selTime,
+      }),
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      setFErr(err.error || 'Checkout failed. Please try again.')
+      return
+    }
+    const { url } = await res.json()
+    window.location.href = url
+  }
 
   if(done) return (
     <section id="book" className="sec" style={{background:'var(--bg2)',textAlign:'center'}}>
@@ -1189,7 +1212,7 @@ function Booking() {
     fontSize:14,outline:'none',transition:'border-color .2s',
   }
 
-  // Step label component — styled with circle number
+  // Step label with circle number
   const SL=(n:string,txt:string)=>(
     <div style={{marginBottom:24,display:'flex',alignItems:'center',gap:14}}>
       <div style={{
@@ -1205,6 +1228,14 @@ function Booking() {
   )
 
   const availCount=ALL_TIMES.length-bookedSlots.length
+  const cartCount=cart.reduce((s,c)=>s+c.quantity,0)
+
+  // Contextual disabled button label
+  const addBtnLabel=canAdd
+    ?'Add to Cart'
+    :!selDate
+      ?'Choose a Date First'
+      :'Choose a Time to Continue'
 
   return (
     <section id="book" className="sec" style={{background:'var(--bg2)'}}>
@@ -1230,7 +1261,7 @@ function Booking() {
                     className="lesson-row"
                     style={{
                       background:isSelected?'var(--bch)':'var(--bgc)',
-                      border:`1px solid ${isSelected?'var(--ba)':'var(--bd)'}`,
+                      border:`1px solid ${isSelected?'var(--o5)':'var(--bd)'}`,
                     }}>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,
@@ -1251,12 +1282,13 @@ function Booking() {
                       <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>{l.duration}</div>
                     </div>
                     <div style={{textAlign:'right',flexShrink:0,marginLeft:16}}>
-                      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:30,fontWeight:300,
+                      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,fontWeight:300,
                         color:isSelected?'var(--o3)':'var(--t1)',lineHeight:1,transition:'color .2s'}}>
                         ${l.price.min}
                       </div>
-                      <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',marginTop:2}}>
-                        –${l.price.max}
+                      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:'var(--t3)',
+                        marginTop:3,textDecoration:'line-through',opacity:.55}}>
+                        ${l.price.max}
                       </div>
                     </div>
                   </button>
@@ -1272,9 +1304,9 @@ function Booking() {
 
                   {/* Schedule later checkbox */}
                   <label style={{
-                    display:'flex',alignItems:'center',gap:12,cursor:'pointer',
+                    display:'flex',alignItems:'flex-start',gap:12,cursor:'pointer',
                     marginBottom:28,fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t2)',
-                    padding:'12px 16px',background:'var(--bgc)',border:'1px solid var(--bd)',
+                    padding:'14px 16px',background:'var(--bgc)',border:'1px solid var(--bd)',
                     transition:'border-color .2s',
                     ...(later?{borderColor:'rgba(255,255,255,.15)'}:{}),
                   }}>
@@ -1282,11 +1314,15 @@ function Booking() {
                       type="checkbox"
                       checked={later}
                       onChange={e=>{setLater(e.target.checked);if(e.target.checked){setSelDate(null);setSelTime(null)}}}
-                      style={{width:16,height:16,flexShrink:0}}
+                      style={{width:16,height:16,flexShrink:0,marginTop:3}}
                     />
                     <div>
-                      <div style={{color:'var(--t1)',fontWeight:500,fontSize:14}}>Schedule after purchase</div>
-                      <div style={{fontSize:12,color:'var(--t3)',marginTop:2}}>I'll confirm a time via email</div>
+                      <div style={{color:'var(--t1)',fontWeight:500,fontSize:14,marginBottom:4}}>
+                        Schedule after purchase
+                      </div>
+                      <div style={{fontSize:12,color:'var(--t3)',lineHeight:1.55}}>
+                        Skip the calendar for now — KP will follow up by email to confirm your time.
+                      </div>
                     </div>
                   </label>
 
@@ -1370,12 +1406,12 @@ function Booking() {
                   {/* Add to cart */}
                   <button onClick={addItem} className="btn-g" disabled={!canAdd}
                     style={{width:'100%',justifyContent:'center',marginTop:8}}>
-                    {canAdd?'Add to Cart':'Select Date & Time to Continue'}
+                    {addBtnLabel}
                   </button>
                   {!canAdd&&!later&&(
                     <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',
                       textAlign:'center',marginTop:10,letterSpacing:'.1em'}}>
-                      {!selDate?'Pick a date first':'Pick a time to continue'}
+                      Or check <em style={{fontStyle:'normal',color:'var(--o7)'}}>Schedule after purchase</em> above to skip
                     </div>
                   )}
                 </div>
@@ -1385,23 +1421,38 @@ function Booking() {
 
           {/* ── RIGHT COLUMN ── */}
           <div>
-            {SL('03',`Cart (${cart.reduce((s,c)=>s+c.quantity,0)})`)}
+            {SL('03','Review Your Booking')}
 
             {/* Empty state */}
             {cart.length===0?(
               <div style={{
-                padding:'52px 28px',textAlign:'center',
+                padding:'44px 28px',textAlign:'center',
                 background:'var(--bgc)',border:'1px dashed rgba(255,255,255,.07)',
-                display:'flex',flexDirection:'column',alignItems:'center',gap:14,
+                display:'flex',flexDirection:'column',alignItems:'center',gap:16,
               }}>
-                <div style={{fontSize:32,opacity:.35}}>⛳</div>
-                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,
-                  color:'var(--t2)',fontStyle:'italic',lineHeight:1.2}}>
-                  Your cart is empty
+                <div style={{fontSize:30,opacity:.3}}>⛳</div>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,
+                  color:'var(--t1)',fontStyle:'italic',lineHeight:1.2}}>
+                  Your booking is empty
                 </div>
-                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
-                  letterSpacing:'.14em',textTransform:'uppercase',color:'var(--t4)'}}>
-                  Select a lesson on the left to get started
+                <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:260,textAlign:'left',
+                  marginTop:4,borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:16,width:'100%'}}>
+                  {[
+                    'Choose a lesson on the left',
+                    'Pick a date & time — or schedule later',
+                    'Add it to cart to continue',
+                  ].map((step,i)=>(
+                    <div key={i} style={{display:'flex',gap:12,alignItems:'flex-start'}}>
+                      <span style={{
+                        fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                        color:'var(--o7)',flexShrink:0,marginTop:1,
+                      }}>{String(i+1).padStart(2,'0')}</span>
+                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                        letterSpacing:'.12em',textTransform:'uppercase',color:'var(--t3)',lineHeight:1.5}}>
+                        {step}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             ):(
@@ -1422,7 +1473,7 @@ function Booking() {
                           </div>
                         ):(
                           <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>
-                            Schedule TBD via email
+                            KP will confirm time via email
                           </div>
                         )}
                       </div>
@@ -1501,7 +1552,7 @@ function Booking() {
                     {lbl:'Subtotal',val:`$${sub.toFixed(2)}`,disc:false,big:false},
                     ...(disc>0?[{lbl:`20% Founding Discount`,val:`-$${disc.toFixed(2)}`,disc:true,big:false}]:[]),
                     {lbl:'Total',val:`$${total.toFixed(2)}`,disc:false,big:true},
-                  ] as {lbl:string;val:string;disc:boolean;big:boolean}[]).map((row,i,arr)=>(
+                  ] as {lbl:string;val:string;disc:boolean;big:boolean}[]).map((row)=>(
                     <div key={row.lbl} style={{
                       display:'flex',justifyContent:'space-between',alignItems:'center',
                       padding:row.big?'14px 0 0':'7px 0',
@@ -1663,7 +1714,7 @@ function Footer() {
       padding:'clamp(64px,8vw,96px) clamp(20px,4vw,40px) 32px',
     }}>
       <div className="wrap">
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:52,marginBottom:64}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:48,marginBottom:64}}>
 
           {/* Brand */}
           <div>
@@ -1675,11 +1726,11 @@ function Footer() {
               lineHeight:1.75,marginBottom:24,maxWidth:240}}>
               Real golf lessons for real people. South Jersey's most affordable coaching — no judgment, no fluff.
             </p>
-            {/* Social placeholder — clean, not broken */}
-            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-              textTransform:'uppercase',color:'var(--t4)',lineHeight:1.6}}>
-              @kpgolftraining<br/>
-              <span style={{color:'rgba(46,64,58,.7)'}}>socials coming soon</span>
+            <div style={{
+              fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',color:'var(--t4)',
+            }}>
+              South Jersey, NJ
             </div>
           </div>
 
@@ -1722,6 +1773,13 @@ function Footer() {
                   textTransform:'uppercase',color:'var(--t4)',marginBottom:6}}>Area</div>
                 <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
                   South Jersey, NJ
+                </div>
+              </div>
+              <div>
+                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.12em',
+                  textTransform:'uppercase',color:'var(--t4)',marginBottom:6}}>Caddie History</div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.6}}>
+                  Pine Valley · Tavistock
                 </div>
               </div>
             </div>
