@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'KP Golf Training | Affordable Golf Lessons in South Jersey',
     description:
-      'Honest, judgment-free golf coaching from someone who\'s spent years looping at Tavistock and Pine Valley. Starting at $35.',
+      'Honest, judgment-free golf coaching from someone who\'s spent years looping at Tavistock and Pine Valley. Starting at $39.99.',
     type: 'website',
     locale: 'en_US',
   },
