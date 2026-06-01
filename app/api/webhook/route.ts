@@ -8,13 +8,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Required: tell Next.js to pass the raw body so Stripe can verify the signature
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get('stripe-signature');
@@ -45,40 +38,25 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Payment completed for session:', session.id);
+        console.log('Checkout session completed:', session.id);
 
         await supabase
           .from('bookings')
-          .update({
-            status: 'confirmed',
-            updated_at: new Date().toISOString(),
-          })
+          .update({ status: 'paid' })
           .eq('stripe_session_id', session.id);
 
         break;
       }
 
-      case 'checkout.session.expired': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Session expired:', session.id);
-
-        await supabase
-          .from('bookings')
-          .update({ status: 'expired' })
-          .eq('stripe_session_id', session.id);
-
-        break;
-      }
-
-      case 'payment_intent.payment_failed': {
+      case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment failed for intent:', paymentIntent.id);
-        // Could update booking status here if needed
+        console.log('PaymentIntent succeeded:', paymentIntent.id);
+        // Could update bookings by payment_intent_id if stored
         break;
       }
 
       default:
-        // Unhandled event type - log and ignore
+        // Unhandled event type
         console.log(`Unhandled event type: ${event.type}`);
     }
   } catch (err: any) {
