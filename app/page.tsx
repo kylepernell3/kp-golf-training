@@ -292,14 +292,14 @@ const LESSONS: Lesson[] = [
   { id:'l90',title:'90-Min Lesson',duration:'90 minutes',price:{min:84.99,max:99.99},type:'single',
     description:'The complete assessment — tee to green. Where real transformation starts.',
     details:['1-on-1 instruction','Complete swing analysis','Short game work','Full practice plan','On-course strategy'] },
-  { id:'pk3',title:'3×45 Starter Pack',duration:'3 sessions \u00b7 45 min each',price:{min:139.99,max:154.99},type:'pack',sessions:3,promoEligible:true,
+  { id:'pk3',title:'3×45 Starter Pack',duration:'3 sessions · 45 min each',price:{min:139.99,max:154.99},type:'pack',sessions:3,promoEligible:true,
     description:'Three focused sessions to build real momentum and see results on the course.',
     details:['3 × 45-min sessions','Progress tracking','Custom drill library','Between-session tips'] },
-  { id:'pk5',title:'5×60 Break-90 Pack',duration:'5 sessions \u00b7 60 min each',price:{min:264.99,max:304.99},type:'pack',sessions:5,bestValue:true,promoEligible:true,
+  { id:'pk5',title:'5×60 Break-90 Pack',duration:'5 sessions · 60 min each',price:{min:264.99,max:304.99},type:'pack',sessions:5,bestValue:true,promoEligible:true,
     description:'Built for golfers serious about breaking 90. A full game transformation over five sessions.',
     details:['5 × 60-min sessions','Full swing overhaul','Short game focus','Course management','Handicap goal plan'] },
-  { id:'pkj',title:'4×45 Junior Pack',duration:'4 sessions \u00b7 45 min each',price:{min:164.99,max:184.99},type:'pack',sessions:4,promoEligible:true,
-    description:'For young golfers ages 6\u201317. Fun, patient, and built for long-term athletic development.',
+  { id:'pkj',title:'4×45 Junior Pack',duration:'4 sessions · 45 min each',price:{min:164.99,max:184.99},type:'pack',sessions:4,promoEligible:true,
+    description:'For young golfers ages 6–17. Fun, patient, and built for long-term athletic development.',
     details:['4 × 45-min sessions','Age-appropriate drills','Fun fundamentals','Parent updates after each session'] },
 ]
 
@@ -797,7 +797,7 @@ function WhyKP() {
           }}/>
           <div style={{position:'absolute',bottom:24,left:-20,zIndex:2,background:'var(--bg)',
             border:'1px solid var(--ba)',padding:'10px 18px'}}>
-            <span className="lbl" style={{fontSize:9}}>Former Caddie \u00b7 Pine Valley \u00b7 Tavistock</span>
+            <span className="lbl" style={{fontSize:9}}>Former Caddie · Pine Valley · Tavistock</span>
           </div>
         </div>
 
@@ -1389,7 +1389,7 @@ function Booking() {
                       )}
                       {item.date?(
                         <div className="lbl" style={{fontSize:9,color:'var(--o5)'}}>
-                          {item.date}{item.time&&` \u00b7 ${item.time}`}
+                          {item.date}{item.time&&` · ${item.time}`}
                         </div>
                       ):(
                         <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>
@@ -1690,7 +1690,7 @@ function Booking() {
                           color:'var(--t1)',marginBottom:5}}>{item.lesson.title}</div>
                         {item.date?(
                           <div className="lbl" style={{fontSize:9,color:'var(--o5)'}}>
-                            {item.date}{item.time&&` \u00b7 ${item.time}`}
+                            {item.date}{item.time&&` · ${item.time}`}
                           </div>
                         ):(
                           <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>
@@ -2002,7 +2002,7 @@ function Footer() {
                 <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.12em',
                   textTransform:'uppercase',color:'var(--t4)',marginBottom:6}}>Caddie History</div>
                 <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.6}}>
-                  Pine Valley \u00b7 Tavistock
+                  Pine Valley · Tavistock
                 </div>
               </div>
             </div>
@@ -2014,10 +2014,10 @@ function Footer() {
           display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:16}}>
           <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,letterSpacing:'.1em',
             textTransform:'uppercase',color:'var(--t4)'}}>
-            \u00a9 {yr} KP Golf Training. All rights reserved.
+            © {yr} KP Golf Training. All rights reserved.
           </div>
           <div style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:14,color:'var(--t3)'}}>
-            Pine Valley \u00b7 Tavistock
+            Pine Valley · Tavistock
           </div>
         </div>
       </div>
