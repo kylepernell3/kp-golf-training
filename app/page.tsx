@@ -469,7 +469,7 @@ function PaymentForm({ total, customerName, customerEmail, onSuccess, onBack }: 
         className="btn-w"
         style={{width:'100%',justifyContent:'center',marginTop:10,fontSize:10}}
       >
-        \u2190 Edit Cart
+        ← Edit Cart
       </button>
     </div>
   )
@@ -885,9 +885,9 @@ function VideoSlider() {
           <h2 className="hdg">See the Work<br/><em>In Action.</em></h2>
           <div style={{display:'flex',gap:10}}>
             <button onClick={()=>go(Math.max(0,act-1))} aria-label="Previous video"
-              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>\u2190</button>
+              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>←</button>
             <button onClick={()=>go(Math.min(VIDEOS.length-1,act+1))} aria-label="Next video"
-              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>\u2192</button>
+              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>→</button>
           </div>
         </div>
       </div>
@@ -964,7 +964,7 @@ function ImageSlider() {
               {String(act+1).padStart(2,'0')} / {String(IMGS.length).padStart(2,'0')}
             </div>
           </div>
-          {([[-1,'left','\u2190'],[1,'right','\u2192']] as [1|-1,string,string][]).map(([d,s,a])=>(
+          {([[-1,'left','←'],[1,'right','→']] as [1|-1,string,string][]).map(([d,s,a])=>(
             <button key={s} onClick={()=>go(d)} aria-label={d===-1?'Previous image':'Next image'} style={{
               position:'absolute',top:'50%',transform:'translateY(-50%)',
               [s]:16,width:44,height:44,background:'rgba(7,15,10,.72)',
@@ -1356,7 +1356,7 @@ function Booking() {
           onMouseEnter={e=>(e.currentTarget.style.color='var(--t1)')}
           onMouseLeave={e=>(e.currentTarget.style.color='var(--t3)')}
         >
-          \u2190 Edit Cart
+          ← Edit Cart
         </button>
 
         <div style={{marginBottom:48}}>
@@ -1444,7 +1444,7 @@ function Booking() {
           {/* Right: Payment Element */}
           <div>
             {SL('06','Payment')}
-            <Elements stripe={stripePromise} options={{clientSecret,appearance:stripeAppearance}}>
+            {clientSecret ? (<Elements stripe={stripePromise} options={{clientSecret,appearance:stripeAppearance}}>
               <PaymentForm
                 total={total}
                 customerName={form.name}
@@ -1452,7 +1452,7 @@ function Booking() {
                 onSuccess={()=>setDone(true)}
                 onBack={()=>{setBookingStep('build');setClientSecret(null)}}
               />
-            </Elements>
+            </Elements>) : (<div style={{color:'var(--t1)',textAlign:'center',padding:'20px'}}>Loading payment form…</div>)}
           </div>
         </div>
       </div>
@@ -1852,7 +1852,7 @@ function Booking() {
                   >
                     {loadingPI
                       ? 'Setting Up Payment…'
-                      : `Proceed to Payment — $${total.toFixed(2)} \u2192`
+                      : `Proceed to Payment — $${total.toFixed(2)} →`
                     }
                   </button>
                   <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t4)',
