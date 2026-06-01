@@ -1280,6 +1280,7 @@ function Booking() {
             quantity:c.quantity,
             date:c.date||null,
             time:c.time||null,
+                        price:c.lesson.price.min,
           })),
           customerEmail:form.email,
           customerName:form.name,
