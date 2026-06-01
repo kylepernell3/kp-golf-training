@@ -7,17 +7,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const PROMO_CODE = 'FOUNDING';
 const PROMO_DISCOUNT = 0.20;
 
-// CartItem shape sent from page.tsx
-interface CartItem {
-  lesson: {
-    id: string;
-    title: string;
-    price: { min: number; max: number };
-    promoEligible?: boolean;
-  };
+// Flat item shape sent from page.tsx cart.map()
+interface FlatItem {
+  lessonId: string;
+  name: string;
   quantity: number;
-  date?: string;
-  time?: string;
+  price: number;        // c.lesson.price.min
+  date?: string | null;
+  time?: string | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -28,16 +25,12 @@ export async function POST(req: NextRequest) {
       customerEmail,
       customerName,
       promoCode,
-      bookedDate,
-      bookedTime,
       promoApplied,
     }: {
-      items: CartItem[];
+      items: FlatItem[];
       customerEmail?: string;
       customerName?: string;
       promoCode?: string;
-      bookedDate?: string;
-      bookedTime?: string;
       promoApplied?: boolean;
     } = body;
 
@@ -46,15 +39,11 @@ export async function POST(req: NextRequest) {
       (typeof promoCode === 'string' &&
         promoCode.toUpperCase() === PROMO_CODE);
 
-    // Sum prices using lesson.price.min (the sale/current price)
+    // Sum prices using the flat price field sent from the frontend
     const amount = Math.round(
       items.reduce((sum, item) => {
-        const unitPrice = item.lesson.price.min;
-        const discount =
-          isPromo && item.lesson.promoEligible !== false
-            ? 1 - PROMO_DISCOUNT
-            : 1;
-        return sum + unitPrice * item.quantity * discount;
+        const discount = isPromo ? 1 - PROMO_DISCOUNT : 1;
+        return sum + item.price * item.quantity * discount;
       }, 0) * 100
     );
 
@@ -65,13 +54,13 @@ export async function POST(req: NextRequest) {
       metadata: {
         customerName: customerName || '',
         customerEmail: customerEmail || '',
-        bookedDate: bookedDate || (items[0]?.date ?? ''),
-        bookedTime: bookedTime || (items[0]?.time ?? ''),
+        bookedDate: items[0]?.date ?? '',
+        bookedTime: items[0]?.time ?? '',
         promoCode: promoCode || '',
         items: JSON.stringify(
           items.map((i) => ({
-            id: i.lesson.id,
-            title: i.lesson.title,
+            id: i.lessonId,
+            title: i.name,
             qty: i.quantity,
             date: i.date,
             time: i.time,
