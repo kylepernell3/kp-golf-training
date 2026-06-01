@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       line_items: lineItems,
       mode: 'payment',
       customer_email: customerEmail,
-      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         customerName: customerName || '',
         bookedDate: bookedDate || '',
