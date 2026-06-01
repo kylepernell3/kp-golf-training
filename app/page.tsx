@@ -4,11 +4,95 @@ import React, {
   useState, useEffect, useRef, useMemo,
 } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { loadStripe } from '@stripe/stripe-js'
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js'
 
+// ─── Supabase (public read — availability) ────────────────────────────────
 const supabasePublic = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+// ─── Stripe (initialised once at module level) ────────────────────────────
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+
+// ─── Stripe Elements appearance ──────────────────────────────────────────
+// Uses hex values — CSS vars are not available inside Stripe's iframe.
+const stripeAppearance = {
+  theme: 'night' as const,
+  variables: {
+    colorPrimary:          '#c5983e',
+    colorBackground:       '#101e14',
+    colorText:             '#ede8dc',
+    colorDanger:           '#e07070',
+    fontFamily:            "'DM Sans', system-ui, sans-serif",
+    spacingUnit:           '4px',
+    borderRadius:          '2px',
+    colorTextPlaceholder:  '#506056',
+    colorBorder:           'rgba(255,255,255,0.07)',
+    colorIconTab:          '#96a89a',
+    colorIconTabSelected:  '#c5983e',
+    colorTextSecondary:    '#96a89a',
+  },
+  rules: {
+    '.Input': {
+      border:          '1px solid rgba(255,255,255,0.07)',
+      backgroundColor: '#101e14',
+      color:           '#ede8dc',
+      boxShadow:       'none',
+      fontSize:        '14px',
+      padding:         '12px 16px',
+    },
+    '.Input:focus': {
+      borderColor: '#6b4c10',
+      boxShadow:   'none',
+    },
+    '.Label': {
+      color:         '#506056',
+      fontSize:      '9px',
+      letterSpacing: '0.14em',
+      textTransform: 'uppercase',
+      fontFamily:    "'JetBrains Mono', monospace",
+      fontWeight:    '400',
+    },
+    '.Tab': {
+      backgroundColor: '#0c1810',
+      border:          '1px solid rgba(255,255,255,0.07)',
+      boxShadow:       'none',
+      color:           '#96a89a',
+    },
+    '.Tab:hover': {
+      color:           '#ede8dc',
+      backgroundColor: '#101e14',
+    },
+    '.Tab--selected': {
+      borderColor:     'rgba(197,152,62,0.4)',
+      backgroundColor: '#101e14',
+      color:           '#ede8dc',
+    },
+    '.Block': {
+      backgroundColor: '#0c1810',
+      borderColor:     'rgba(255,255,255,0.07)',
+    },
+    '.Error': {
+      color:    '#e07070',
+      fontSize: '13px',
+    },
+    '.CheckboxInput': {
+      backgroundColor: '#101e14',
+      borderColor:     'rgba(255,255,255,0.07)',
+    },
+    '.CheckboxInput--checked': {
+      backgroundColor: '#c5983e',
+      borderColor:     '#c5983e',
+    },
+  },
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AVAILABILITY HELPERS
@@ -184,21 +268,13 @@ const IMGS = [
 ]
 
 const ICAPS = [
-  '18th Overlook',
-  '5th Teeshot',
-  '3rd Tee Shot',
-  '15th in Fall',
-  'Putting Green',
-  '8th Double Green',
-  '18th Teeshot',
-  '9th Approach',
-  '16th Green',
-  'Golden State Warriors Championship Rings',
-  '14th Teeshot',
+  '18th Overlook','5th Teeshot','3rd Tee Shot','15th in Fall','Putting Green',
+  '8th Double Green','18th Teeshot','9th Approach','16th Green',
+  'Golden State Warriors Championship Rings','14th Teeshot',
 ]
 
 const ICAP_SUBS: (string|null)[] = [
-  null, null, null, null, null, null, null, null, null,
+  null,null,null,null,null,null,null,null,null,
   'Caddied for a Pine Valley member — 6× NBA Champion',
   null,
 ]
@@ -216,15 +292,15 @@ const LESSONS: Lesson[] = [
   { id:'l90',title:'90-Min Lesson',duration:'90 minutes',price:{min:84.99,max:99.99},type:'single',
     description:'The complete assessment — tee to green. Where real transformation starts.',
     details:['1-on-1 instruction','Complete swing analysis','Short game work','Full practice plan','On-course strategy'] },
-  { id:'pk3',title:'3×45 Starter Pack',duration:'3 sessions · 45 min each',price:{min:139.99,max:154.99},type:'pack',sessions:3,promoEligible:true,
+  { id:'pk3',title:'3\u00d745 Starter Pack',duration:'3 sessions \u00b7 45 min each',price:{min:139.99,max:154.99},type:'pack',sessions:3,promoEligible:true,
     description:'Three focused sessions to build real momentum and see results on the course.',
-    details:['3 × 45-min sessions','Progress tracking','Custom drill library','Between-session tips'] },
-  { id:'pk5',title:'5×60 Break-90 Pack',duration:'5 sessions · 60 min each',price:{min:264.99,max:304.99},type:'pack',sessions:5,bestValue:true,promoEligible:true,
+    details:['3 \u00d7 45-min sessions','Progress tracking','Custom drill library','Between-session tips'] },
+  { id:'pk5',title:'5\u00d760 Break-90 Pack',duration:'5 sessions \u00b7 60 min each',price:{min:264.99,max:304.99},type:'pack',sessions:5,bestValue:true,promoEligible:true,
     description:'Built for golfers serious about breaking 90. A full game transformation over five sessions.',
-    details:['5 × 60-min sessions','Full swing overhaul','Short game focus','Course management','Handicap goal plan'] },
-  { id:'pkj',title:'4×45 Junior Pack',duration:'4 sessions · 45 min each',price:{min:164.99,max:184.99},type:'pack',sessions:4,promoEligible:true,
-    description:'For young golfers ages 6–17. Fun, patient, and built for long-term athletic development.',
-    details:['4 × 45-min sessions','Age-appropriate drills','Fun fundamentals','Parent updates after each session'] },
+    details:['5 \u00d7 60-min sessions','Full swing overhaul','Short game focus','Course management','Handicap goal plan'] },
+  { id:'pkj',title:'4\u00d745 Junior Pack',duration:'4 sessions \u00b7 45 min each',price:{min:164.99,max:184.99},type:'pack',sessions:4,promoEligible:true,
+    description:'For young golfers ages 6\u201317. Fun, patient, and built for long-term athletic development.',
+    details:['4 \u00d7 45-min sessions','Age-appropriate drills','Fun fundamentals','Parent updates after each session'] },
 ]
 
 const MARQUEE_W = [
@@ -241,30 +317,30 @@ function getDates(): Date[] {
 
 const FAQS=[
   { q:'Are you PGA certified?',
-    a:"No — and that's kind of the point. I'm not a textbook instructor with a laminated card. I learned golf from the ground up, caddied at two of the most prestigious courses in the world — Tavistock and Pine Valley — and spent years figuring out what actually fixes a real golfer's game. No jargon. No $300/hr ego. Just honest feedback that shows up on your scorecard." },
+    a:"No \u2014 and that\u2019s kind of the point. I\u2019m not a textbook instructor with a laminated card. I learned golf from the ground up, caddied at two of the most prestigious courses in the world \u2014 Tavistock and Pine Valley \u2014 and spent years figuring out what actually fixes a real golfer\u2019s game. No jargon. No $300/hr ego. Just honest feedback that shows up on your scorecard." },
   { q:'Where are lessons held?',
-    a:"At driving ranges and practice facilities across South Jersey. Once you book, I'll confirm a convenient spot for you. I keep a few local locations in rotation and recommend the best fit based on what we're working on." },
+    a:"At driving ranges and practice facilities across South Jersey. Once you book, I\u2019ll confirm a convenient spot for you. I keep a few local locations in rotation and recommend the best fit based on what we\u2019re working on." },
   { q:'What should I bring?',
-    a:"Your clubs, golf shoes or sneakers, and a willingness to try something different. I bring alignment sticks, training aids, and my phone for video analysis. No clubs yet? No problem — I'll help you figure out what you need." },
+    a:"Your clubs, golf shoes or sneakers, and a willingness to try something different. I bring alignment sticks, training aids, and my phone for video analysis. No clubs yet? No problem \u2014 I\u2019ll help you figure out what you need." },
   { q:'Can I reschedule or cancel?',
-    a:"Absolutely. Give me at least 24 hours and we'll sort it out. Pack sessions don't expire, so no stress if you need to push a session. I'm not a big box golf academy — I'm flexible because I run this personally." },
+    a:"Absolutely. Give me at least 24 hours and we\u2019ll sort it out. Pack sessions don\u2019t expire, so no stress if you need to push a session. I\u2019m not a big box golf academy \u2014 I\u2019m flexible because I run this personally." },
 ]
 
 const STEPS=[
-  {n:'01',icon:'⛳',title:'Choose Your Lesson',desc:'Pick a session length or pack that fits your schedule and goals.'},
-  {n:'02',icon:'📅',title:'Pick a Time',desc:'Select a date and time from available slots. First-timers get priority.'},
-  {n:'03',icon:'🔒',title:'Lock It In',desc:'Pay securely online. Your spot is confirmed instantly.'},
-  {n:'04',icon:'🏌️',title:'Show Up & Swing',desc:'Meet at the range. We diagnose, drill, and practice — no judgment.'},
-  {n:'05',icon:'📋',title:'Take the Plan Home',desc:'Leave with a custom practice plan so every range session after this one counts.'},
+  {n:'01',icon:'\u26f3',title:'Choose Your Lesson',desc:'Pick a session length or pack that fits your schedule and goals.'},
+  {n:'02',icon:'\ud83d\udcc5',title:'Pick a Time',desc:'Select a date and time from available slots. First-timers get priority.'},
+  {n:'03',icon:'\ud83d\udd12',title:'Lock It In',desc:'Pay securely online. Your spot is confirmed instantly.'},
+  {n:'04',icon:'\ud83c\udfcc\ufe0f',title:'Show Up & Swing',desc:'Meet at the range. We diagnose, drill, and practice \u2014 no judgment.'},
+  {n:'05',icon:'\ud83d\udccb',title:'Take the Plan Home',desc:'Leave with a custom practice plan so every range session after this one counts.'},
 ]
 
 const PILLARS=[
-  {icon:'🏆',title:"Lived at the Game's Highest Level",
-   body:"I caddied at Tavistock and Pine Valley — two of the most storied courses in the world. That experience gave me an eye for the game that no classroom ever could."},
-  {icon:'🎯',title:'Real Fixes, Real Fast',
+  {icon:'\ud83c\udfc6',title:"Lived at the Game\u2019s Highest Level",
+   body:"I caddied at Tavistock and Pine Valley \u2014 two of the most storied courses in the world. That experience gave me an eye for the game that no classroom ever could."},
+  {icon:'\ud83c\udfaf',title:'Real Fixes, Real Fast',
    body:"Skip the theory. I teach simple mechanical cues and targeted drills that show up on the scorecard within a round or two. No jargon, no fluff."},
-  {icon:'💚',title:'Built for South Jersey Golfers',
-   body:"Weekend warriors, beginners, juniors. My pricing is built for real golfers — not golf academies. You don't need a trust fund to play better golf."},
+  {icon:'\ud83d\udc9a',title:'Built for South Jersey Golfers',
+   body:"Weekend warriors, beginners, juniors. My pricing is built for real golfers \u2014 not golf academies. You don\u2019t need a trust fund to play better golf."},
 ]
 
 const PROMO='FOUNDING', PROMO_PCT=0.2
@@ -298,6 +374,105 @@ function useAutoplay(threshold=0.5) {
     obs.observe(v);return()=>obs.disconnect()
   },[threshold])
   return {ref,playing}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYMENT FORM  (must live inside <Elements> provider)
+// ─────────────────────────────────────────────────────────────────────────────
+interface PaymentFormProps {
+  total:        number
+  customerName: string
+  customerEmail:string
+  onSuccess:    ()=>void
+  onBack:       ()=>void
+}
+
+function PaymentForm({ total, customerName, customerEmail, onSuccess, onBack }: PaymentFormProps) {
+  const stripe   = useStripe()
+  const elements = useElements()
+  const [paying,  setPaying]  = useState(false)
+  const [payErr,  setPayErr]  = useState('')
+
+  const submit = async () => {
+    if (!stripe || !elements || paying) return
+    setPaying(true)
+    setPayErr('')
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        // Fallback URL for payment methods that require redirect (e.g. 3DS bank flows).
+        // The webhook is the source of truth regardless of redirect.
+        return_url: typeof window !== 'undefined'
+          ? `${window.location.origin}/?booking=confirmed`
+          : '/',
+        payment_method_data: {
+          billing_details: { name: customerName, email: customerEmail },
+        },
+      },
+      // Stay on-page for card payments; redirect only if the payment method requires it.
+      redirect: 'if_required',
+    })
+
+    if (error) {
+      setPayErr(error.message || 'Payment failed. Please try again.')
+      setPaying(false)
+    } else {
+      // Payment confirmed inline — webhook will write the booking record
+      onSuccess()
+    }
+  }
+
+  return (
+    <div>
+      <PaymentElement
+        options={{
+          layout: 'tabs',
+          defaultValues: {
+            billingDetails: { name: customerName, email: customerEmail },
+          },
+        }}
+      />
+
+      {payErr && (
+        <div style={{
+          fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'#e07070',
+          marginTop:14,padding:'10px 14px',
+          background:'rgba(224,112,112,.07)',border:'1px solid rgba(224,112,112,.2)',
+        }}>
+          {payErr}
+        </div>
+      )}
+
+      <button
+        onClick={submit}
+        disabled={!stripe || !elements || paying}
+        className="btn-g"
+        style={{width:'100%',justifyContent:'center',marginTop:20,padding:'17px 24px',fontSize:11}}
+      >
+        {paying
+          ? 'Processing\u2026'
+          : `Confirm & Pay \u2014 $${total.toFixed(2)}`
+        }
+      </button>
+
+      <div style={{
+        fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t4)',
+        textAlign:'center',marginTop:10,letterSpacing:'.12em',
+      }}>
+        Secure payment powered by Stripe
+      </div>
+
+      <button
+        onClick={onBack}
+        disabled={paying}
+        className="btn-w"
+        style={{width:'100%',justifyContent:'center',marginTop:10,fontSize:10}}
+      >
+        \u2190 Edit Cart
+      </button>
+    </div>
+  )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -373,7 +548,7 @@ function Navbar() {
     <>
       <nav style={{
         position:'fixed',top:0,left:0,right:0,zIndex:200,height:68,
-        padding:'0 clamp(20px,3vw,36px)',
+        padding:'0 clamp(20px,3vw,40px)',
         display:'flex',alignItems:'center',justifyContent:'space-between',
         background:scrolled?'rgba(7,15,10,.94)':'transparent',
         backdropFilter:scrolled?'blur(14px)':'none',
@@ -382,28 +557,25 @@ function Navbar() {
       }}>
         <button
           onClick={()=>window.scrollTo({top:0,behavior:'smooth'})}
-          aria-label="KP Golf Training — scroll to top"
+          aria-label="KP Golf Training \u2014 scroll to top"
           style={{
             fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:400,
-            color:'#ede8dc',background:'none',border:'none',cursor:'pointer',padding:'4px 0',
-            lineHeight:1,
+            color:'#ede8dc',background:'none',border:'none',cursor:'pointer',padding:'4px 0',lineHeight:1,
           }}>KP<span style={{color:'#c5983e'}}>.</span>
         </button>
 
-        {/* Desktop */}
-        <div className="nd" style={{alignItems:'center',gap:36}}>
+        <div className="nd" style={{alignItems:'center',gap:44}}>
           {NAV.map(l=>(
             <button key={l.h} onClick={()=>go(l.h)} style={lb}
               onMouseEnter={e=>(e.currentTarget.style.color='#ede8dc')}
               onMouseLeave={e=>(e.currentTarget.style.color='#96a89a')}
             >{l.l}</button>
           ))}
-          <button onClick={()=>go('#book')} className="btn-g" style={{padding:'9px 20px',fontSize:10}}>
+          <button onClick={()=>go('#book')} className="btn-g" style={{padding:'9px 22px',fontSize:10}}>
             Book a Lesson
           </button>
         </div>
 
-        {/* Hamburger */}
         <button
           className="nh"
           onClick={()=>setOpen(o=>!o)}
@@ -420,14 +592,13 @@ function Navbar() {
         </button>
       </nav>
 
-      {/* Mobile drawer */}
       <div
         aria-hidden={!open}
         style={{
           position:'fixed',top:68,left:0,right:0,zIndex:199,
           background:'rgba(7,15,10,.97)',backdropFilter:'blur(20px)',
           borderBottom:'1px solid rgba(255,255,255,.07)',
-          padding:'28px 28px 44px',display:'flex',flexDirection:'column',gap:4,
+          padding:'36px 32px 52px',display:'flex',flexDirection:'column',gap:6,
           transform:open?'translateY(0)':'translateY(-110%)',
           transition:'transform .36s cubic-bezier(.4,0,.2,1)',
           pointerEvents:open?'auto':'none',
@@ -524,14 +695,10 @@ function Hero() {
       <div style={{position:'relative',zIndex:10,width:'100%',maxWidth:1280,margin:'0 auto',
         padding:'124px clamp(20px,4vw,40px) 80px'}}>
         <div style={{maxWidth:800}}>
-
-          {/* Eyebrow */}
           <div className="lbl" style={{marginBottom:30,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
             <span style={{width:36,height:1,background:'#c5983e',display:'inline-block',flexShrink:0}}/>
-            South Jersey Golf Lessons — Starting at $39.99
+            South Jersey Golf Lessons \u2014 Starting at $39.99
           </div>
-
-          {/* Headline */}
           <h1 style={{
             fontFamily:"'Cormorant Garamond',serif",
             fontSize:'clamp(64px,10.5vw,128px)',fontWeight:400,lineHeight:.88,
@@ -540,8 +707,6 @@ function Hero() {
             Real Golf.<br/>
             <em style={{color:'#d8b05a',fontStyle:'italic'}}>Real</em> Results.
           </h1>
-
-          {/* Sub */}
           <p style={{
             fontFamily:"'DM Sans',sans-serif",fontSize:'clamp(15px,1.8vw,18px)',lineHeight:1.65,
             color:'#96a89a',maxWidth:500,marginBottom:48,
@@ -549,38 +714,30 @@ function Hero() {
             Former caddie at Pine Valley &amp; Tavistock. Judgment-free lessons for beginners,
             weekend warriors, and everyone in between.
           </p>
-
-          {/* CTAs */}
           <div style={{display:'flex',gap:14,flexWrap:'wrap',marginBottom:68}}>
             <button onClick={()=>go('#book')} className="btn-g">Book a Lesson</button>
-            <button onClick={()=>go('#videos')} className="btn-w">Watch Swing Videos ↓</button>
+            <button onClick={()=>go('#videos')} className="btn-w">Watch Swing Videos \u2193</button>
           </div>
-
-          {/* Metrics */}
           <div style={{display:'flex',gap:44,flexWrap:'wrap',rowGap:28}}>
             {([
-              {v:'$39.99', l:'Starting price',   sm:false},
-              {v:'2',      l:'Elite courses',     sm:false},
-              {v:'Tailored', l:'To Your Swing',   sm:true },
+              {v:'$39.99',l:'Starting price',sm:false},
+              {v:'2',l:'Elite courses',sm:false},
+              {v:'Tailored',l:'To Your Swing',sm:true},
             ] as {v:string;l:string;sm:boolean}[]).map(({v,l,sm})=>(
               <div key={l}>
                 <div style={{
                   fontFamily:"'Cormorant Garamond',serif",
                   fontSize:sm?'clamp(26px,3.5vw,36px)':'clamp(34px,4.5vw,46px)',
-                  fontWeight:300,color:'#d8b05a',lineHeight:1,
-                  fontStyle:sm?'italic':'normal',
+                  fontWeight:300,color:'#d8b05a',lineHeight:1,fontStyle:sm?'italic':'normal',
                 }}>{v}</div>
-                <div style={{
-                  fontFamily:"'JetBrains Mono',monospace",fontSize:9,
-                  letterSpacing:'.16em',textTransform:'uppercase',color:'#506056',marginTop:6,
-                }}>{l}</div>
+                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                  letterSpacing:'.16em',textTransform:'uppercase',color:'#506056',marginTop:6}}>{l}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
       <div aria-hidden="true" style={{position:'absolute',bottom:36,left:'50%',transform:'translateX(-50%)',
         zIndex:10,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
         <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.2em',
@@ -605,7 +762,7 @@ function Marquees() {
             fontFamily:"'DM Sans',sans-serif",fontSize:12,letterSpacing:'.11em',textTransform:'uppercase',
             color:dir==='l'?'var(--t2)':'var(--t3)',whiteSpace:'nowrap',paddingRight:18,
           }}>
-            {w}<span style={{color:dir==='l'?'var(--o5)':'var(--o7)',fontSize:5}}>●</span>
+            {w}<span style={{color:dir==='l'?'var(--o5)':'var(--o7)',fontSize:5}}>\u25cf</span>
           </span>
         ))}
       </div>
@@ -628,11 +785,8 @@ function WhyKP() {
   return (
     <section id="about" ref={ref} className="sec" style={{maxWidth:1280,margin:'0 auto'}}>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:72,alignItems:'center'}}>
-
-        {/* Image */}
         <div style={{
-          position:'relative',
-          opacity:inView?1:0,
+          position:'relative',opacity:inView?1:0,
           transform:inView?'none':'translateX(-20px)',
           transition:'opacity .9s ease,transform .9s ease',
         }}>
@@ -643,32 +797,27 @@ function WhyKP() {
           }}/>
           <div style={{position:'absolute',bottom:24,left:-20,zIndex:2,background:'var(--bg)',
             border:'1px solid var(--ba)',padding:'10px 18px'}}>
-            <span className="lbl" style={{fontSize:9}}>Former Caddie · Pine Valley · Tavistock</span>
+            <span className="lbl" style={{fontSize:9}}>Former Caddie \u00b7 Pine Valley \u00b7 Tavistock</span>
           </div>
         </div>
 
-        {/* Copy */}
         <div>
           <div className="lbl" style={{marginBottom:18}}>Why KP Training</div>
           <h2 className="hdg" style={{marginBottom:26}}>The Bag Tag<br/><em>Means Something.</em></h2>
           <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',lineHeight:1.8,marginBottom:52,maxWidth:480}}>
-            You don't learn golf at Pine Valley by reading a manual. You learn it by watching the world's
-            best players navigate every lie, every wind, every pressure putt. That's the education
-            I'm bringing to South Jersey.
+            You don\u2019t learn golf at Pine Valley by reading a manual. You learn it by watching the world\u2019s
+            best players navigate every lie, every wind, every pressure putt. That\u2019s the education
+            I\u2019m bringing to South Jersey.
           </p>
           <div style={{display:'flex',flexDirection:'column',gap:28}}>
             {PILLARS.map((p,i)=>(
               <div key={i} style={{
                 display:'flex',gap:20,alignItems:'flex-start',
-                opacity:inView?1:0,
-                transform:inView?'none':'translateX(28px)',
+                opacity:inView?1:0,transform:inView?'none':'translateX(28px)',
                 transition:`opacity .65s ease ${.2+i*.15}s,transform .65s ease ${.2+i*.15}s`,
               }}>
-                <div style={{
-                  flexShrink:0,width:48,height:48,background:'var(--bgc)',
-                  border:'1px solid var(--o7)',
-                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,
-                }}>{p.icon}</div>
+                <div style={{flexShrink:0,width:48,height:48,background:'var(--bgc)',border:'1px solid var(--o7)',
+                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>{p.icon}</div>
                 <div>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,color:'var(--t1)',marginBottom:7}}>{p.title}</div>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t2)',lineHeight:1.7}}>{p.body}</div>
@@ -717,22 +866,17 @@ function VideoSlider() {
   const [act,setAct]=useState(0)
   const {ref,inView}=useInView({threshold:.2})
   const [isMobile,setIsMobile]=useState(false)
-
   useEffect(()=>{
     const check=()=>setIsMobile(window.innerWidth<768)
-    check()
-    window.addEventListener('resize',check,{passive:true})
+    check();window.addEventListener('resize',check,{passive:true})
     return()=>window.removeEventListener('resize',check)
   },[])
-
   const slideW=isMobile?'90vw':'72vw'
-
   const go=(i:number)=>{
     const s=scRef.current?.children[i] as HTMLElement
     s?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})
     setAct(i)
   }
-
   return (
     <section id="videos" ref={ref} style={{padding:'clamp(80px,10vw,140px) 0'}}>
       <div style={{maxWidth:1280,margin:'0 auto',padding:'0 clamp(20px,4vw,40px)',marginBottom:48}}>
@@ -740,18 +884,13 @@ function VideoSlider() {
         <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:24}}>
           <h2 className="hdg">See the Work<br/><em>In Action.</em></h2>
           <div style={{display:'flex',gap:10}}>
-            <button
-              onClick={()=>go(Math.max(0,act-1))}
-              aria-label="Previous video"
-              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>←</button>
-            <button
-              onClick={()=>go(Math.min(VIDEOS.length-1,act+1))}
-              aria-label="Next video"
-              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>→</button>
+            <button onClick={()=>go(Math.max(0,act-1))} aria-label="Previous video"
+              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>\u2190</button>
+            <button onClick={()=>go(Math.min(VIDEOS.length-1,act+1))} aria-label="Next video"
+              className="btn-w" style={{padding:'10px 20px',fontSize:20}}>\u2192</button>
           </div>
         </div>
       </div>
-
       <div style={{position:'relative'}}>
         <div ref={scRef} className="ns" style={{
           display:'flex',gap:16,overflowX:'auto',scrollSnapType:'x mandatory',
@@ -765,7 +904,6 @@ function VideoSlider() {
           background:'linear-gradient(to right,#070f0a 0%,transparent 8%,transparent 92%,#070f0a 100%)',
         }}/>
       </div>
-
       <div style={{display:'flex',gap:8,justifyContent:'center',marginTop:32}}>
         {VIDEOS.map((_,i)=>(
           <button key={i} onClick={()=>go(i)} aria-label={`Go to clip ${i+1}`} style={{
@@ -791,7 +929,6 @@ function ImageSlider() {
     return()=>clearInterval(t)
   },[inView])
   const go=(d:1|-1)=>setAct(p=>(p+d+IMGS.length)%IMGS.length)
-
   return (
     <section ref={ref} style={{padding:'clamp(80px,10vw,140px) clamp(20px,4vw,40px)'}}>
       <div style={{maxWidth:1280,margin:'0 auto'}}>
@@ -799,8 +936,6 @@ function ImageSlider() {
         <h2 className="hdg" style={{textAlign:'center',marginBottom:52}}>
           The Course.<br/><em>The Range. The Work.</em>
         </h2>
-
-        {/* Main frame */}
         <div style={{
           position:'relative',aspectRatio:'16/9',overflow:'hidden',
           background:'var(--bgc)',marginBottom:14,
@@ -813,34 +948,23 @@ function ImageSlider() {
               opacity:i===act?1:0,transition:'opacity .85s ease',
             }}/>
           ))}
-
-          {/* Caption gradient */}
           <div style={{
-            position:'absolute',bottom:0,left:0,right:0,
-            padding:'72px 28px 24px',
+            position:'absolute',bottom:0,left:0,right:0,padding:'72px 28px 24px',
             background:'linear-gradient(to top,rgba(7,15,10,.92) 0%,transparent 100%)',
             pointerEvents:'none',
           }}>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontStyle:'italic',
-              color:'var(--t1)',lineHeight:1.2}}>
-              {ICAPS[act]}
-            </div>
+              color:'var(--t1)',lineHeight:1.2}}>{ICAPS[act]}</div>
             {ICAP_SUBS[act]&&(
-              <div style={{
-                fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-                textTransform:'uppercase',color:'var(--o5)',marginTop:7,
-              }}>
-                {ICAP_SUBS[act]}
-              </div>
+              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+                textTransform:'uppercase',color:'var(--o5)',marginTop:7}}>{ICAP_SUBS[act]}</div>
             )}
             <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
               textTransform:'uppercase',color:'var(--t4)',marginTop:6}}>
               {String(act+1).padStart(2,'0')} / {String(IMGS.length).padStart(2,'0')}
             </div>
           </div>
-
-          {/* Nav arrows */}
-          {([[-1,'left','←'],[1,'right','→']] as [1|-1,string,string][]).map(([d,s,a])=>(
+          {([[-1,'left','\u2190'],[1,'right','\u2192']] as [1|-1,string,string][]).map(([d,s,a])=>(
             <button key={s} onClick={()=>go(d)} aria-label={d===-1?'Previous image':'Next image'} style={{
               position:'absolute',top:'50%',transform:'translateY(-50%)',
               [s]:16,width:44,height:44,background:'rgba(7,15,10,.72)',
@@ -849,13 +973,10 @@ function ImageSlider() {
             }}>{a}</button>
           ))}
         </div>
-
-        {/* Thumbnails */}
         <div className="ns" style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:2}}>
           {IMGS.map((src,i)=>(
             <button key={i} onClick={()=>setAct(i)} aria-label={`View ${ICAPS[i]}`} style={{
-              flexShrink:0,width:76,height:54,padding:0,cursor:'pointer',
-              overflow:'hidden',background:'none',
+              flexShrink:0,width:76,height:54,padding:0,cursor:'pointer',overflow:'hidden',background:'none',
               border:`2px solid ${i===act?'var(--o5)':'transparent'}`,
               opacity:i===act?1:.48,transition:'all .25s',
             }}>
@@ -881,89 +1002,68 @@ function Pricing() {
   function Card({lesson,idx}:{lesson:Lesson;idx:number}) {
     return (
       <div className="kcard" style={{
-        padding:'28px 24px 24px',position:'relative',overflow:'hidden',
+        padding:'30px 28px 28px',position:'relative',overflow:'hidden',
         display:'flex',flexDirection:'column',
-        opacity:inView?1:0,
-        transform:inView?'none':'translateY(36px)',
+        opacity:inView?1:0,transform:inView?'none':'translateY(36px)',
         transition:`opacity .6s ease ${idx*.08}s,transform .6s ease ${idx*.08}s`,
         ...(lesson.popular?{border:'1px solid var(--ba)'}:{}),
       }}>
-        {/* Badge row */}
-        <div style={{display:'flex',gap:7,marginBottom:18,flexWrap:'wrap',minHeight:24,alignItems:'center'}}>
+        <div style={{display:'flex',gap:7,marginBottom:20,flexWrap:'wrap',minHeight:24,alignItems:'center'}}>
           {lesson.popular&&(
-            <span style={{
-              fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-              textTransform:'uppercase',background:'var(--o5)',color:'var(--bg)',padding:'4px 10px',
-              fontWeight:500,
-            }}>Most Popular</span>
+            <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',background:'var(--o5)',color:'var(--bg)',padding:'4px 10px',fontWeight:500}}>
+              Most Popular</span>
           )}
           {lesson.bestValue&&(
-            <span style={{
-              fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-              textTransform:'uppercase',background:'var(--g7)',color:'var(--t1)',padding:'4px 10px',
-            }}>Best Value</span>
+            <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',background:'var(--g7)',color:'var(--t1)',padding:'4px 10px'}}>
+              Best Value</span>
           )}
           {lesson.promoEligible&&(
-            <span style={{
-              fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-              textTransform:'uppercase',border:'1px solid var(--o7)',color:'var(--o5)',padding:'3px 9px',
-            }}>Promo Eligible</span>
+            <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+              textTransform:'uppercase',border:'1px solid var(--o7)',color:'var(--o5)',padding:'3px 9px'}}>
+              Promo Eligible</span>
           )}
         </div>
 
-        {/* Title & duration */}
         <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:14,color:'var(--t1)',marginBottom:4}}>
           {lesson.title}
         </div>
-        <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:20}}>{lesson.duration}</div>
+        <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:22}}>{lesson.duration}</div>
 
-        {/* ── PRICE BLOCK: current price + compare-at ── */}
-        <div style={{marginBottom:lesson.sessions?6:20}}>
-          <div style={{
-            fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-            textTransform:'uppercase',color:'var(--o5)',opacity:.65,marginBottom:7,
-          }}>Now</div>
-          <div style={{display:'flex',alignItems:'center',gap:14}}>
-            <span style={{
-              fontFamily:"'Cormorant Garamond',serif",fontSize:52,fontWeight:300,
-              color:'var(--t1)',lineHeight:1,
-            }}>
+        {/* Price: current + compare-at */}
+        <div style={{marginBottom:lesson.sessions?8:16}}>
+          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+            textTransform:'uppercase',color:'var(--o5)',marginBottom:8}}>Now</div>
+          <div style={{display:'flex',alignItems:'baseline',gap:14}}>
+            <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:52,fontWeight:300,
+              color:'var(--t1)',lineHeight:1}}>
               ${lesson.price.min}
             </span>
-            <div style={{display:'flex',flexDirection:'column',gap:4,paddingBottom:2}}>
-              <span style={{
-                fontFamily:"'JetBrains Mono',monospace",fontSize:8,letterSpacing:'.1em',
-                textTransform:'uppercase',color:'var(--t4)',
-              }}>Regular</span>
-              <span style={{
-                fontFamily:"'DM Sans',sans-serif",fontSize:14,
-                color:'var(--t3)',textDecoration:'line-through',opacity:.6,
-              }}>
-                ${lesson.price.max}
-              </span>
+            <div style={{display:'flex',flexDirection:'column',gap:2,paddingBottom:6}}>
+              <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                letterSpacing:'.1em',textTransform:'uppercase',color:'var(--t4)',lineHeight:1}}>Reg.</span>
+              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,fontWeight:400,
+                color:'var(--t4)',textDecoration:'line-through',lineHeight:1}}>${lesson.price.max}</span>
             </div>
           </div>
         </div>
 
-        {/* Per-session line for packs */}
         {lesson.sessions&&(
-          <div style={{
-            fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',marginBottom:20,
-            letterSpacing:'.08em',
-          }}>
+          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',
+            letterSpacing:'.1em',marginBottom:16}}>
             ~${Math.round(lesson.price.min/lesson.sessions)} per session
           </div>
         )}
 
-        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.65,marginBottom:20,flex:1}}>
-          {lesson.description}
-        </p>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',
+          lineHeight:1.65,marginBottom:20,flex:1}}>{lesson.description}</p>
 
-        <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
+        <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:28}}>
           {lesson.details.map((d,i)=>(
             <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',
               fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
-              <span style={{color:'var(--o7)',flexShrink:0,marginTop:2,lineHeight:1.2}}>—</span>
+              <span style={{color:'var(--o7)',flexShrink:0,marginTop:2,lineHeight:1.2}}>\u2014</span>
               <span>{d}</span>
             </div>
           ))}
@@ -984,24 +1084,23 @@ function Pricing() {
           <h2 className="hdg">No Gimmicks.<br/><em>Just Lessons.</em></h2>
         </div>
 
-        {/* ── FOUNDING MEMBER PROMO BANNER ── */}
+        {/* Founding member banner — no fake scarcity counts */}
         <div style={{
           background:'rgba(197,152,62,.06)',border:'1px solid var(--ba)',
-          padding:'18px 24px',margin:'52px 0 40px',
+          padding:'20px 26px',margin:'52px 0 40px',
           display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',
         }}>
-          <span style={{fontSize:18}}>🎯</span>
+          <span style={{fontSize:18}}>\ud83c\udfaf</span>
           <div>
             <div className="lbl" style={{fontSize:10,marginBottom:5}}>
-              Founding Member Pricing — Code: <strong style={{color:'var(--o3)'}}>FOUNDING</strong>
+              Founding Member Pricing \u2014 Code: <strong style={{color:'var(--o3)'}}>FOUNDING</strong>
             </div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.5}}>
-              20% off all lesson packs for founding members. Limited-time offer for early supporters.
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
+              Save 20% on all lesson packs. Limited-time founding member rate for early supporters.
             </div>
           </div>
         </div>
 
-        {/* Singles */}
         <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:500,fontSize:10,
           color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.16em',marginBottom:18}}>
           Individual Sessions
@@ -1010,7 +1109,6 @@ function Pricing() {
           {singles.map((l,i)=><Card key={l.id} lesson={l} idx={i}/>)}
         </div>
 
-        {/* Packs */}
         <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:500,fontSize:10,
           color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.16em',marginBottom:18}}>
           Lesson Packs
@@ -1035,26 +1133,22 @@ function HowItWorks() {
           <div className="lbl" style={{marginBottom:18}}>The Process</div>
           <h2 className="hdg">From Zero to<br/><em>On the Course.</em></h2>
         </div>
-
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))',gap:40}}>
           {STEPS.map((step,i)=>(
             <div key={i} style={{
               display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',
-              opacity:inView?1:0,
-              transform:inView?'none':'translateY(28px)',
+              opacity:inView?1:0,transform:inView?'none':'translateY(28px)',
               transition:`opacity .65s ease ${i*.12}s,transform .65s ease ${i*.12}s`,
             }}>
               <div style={{
-                width:80,height:80,borderRadius:'50%',
-                background:'var(--bgc)',border:'1px solid var(--o7)',
+                width:80,height:80,borderRadius:'50%',background:'var(--bgc)',border:'1px solid var(--o7)',
                 display:'flex',alignItems:'center',justifyContent:'center',
                 fontSize:28,marginBottom:20,position:'relative',flexShrink:0,
               }}>
                 <span role="img" aria-hidden="true">{step.icon}</span>
                 <span style={{
                   position:'absolute',top:-10,right:-6,
-                  fontFamily:"'JetBrains Mono',monospace",
-                  fontSize:9,letterSpacing:'.1em',
+                  fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.1em',
                   background:'var(--o5)',color:'var(--bg)',padding:'3px 7px',
                 }}>{step.n}</span>
               </div>
@@ -1064,8 +1158,6 @@ function HowItWorks() {
             </div>
           ))}
         </div>
-
-        {/* CTA banner */}
         <div style={{
           background:'var(--g9)',border:'1px solid var(--bd)',
           padding:'clamp(40px,5vw,64px) clamp(28px,5vw,56px)',
@@ -1076,8 +1168,11 @@ function HowItWorks() {
           <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',marginBottom:36}}>
             First lesson starts at $39.99. No experience needed.
           </p>
-          <button onClick={()=>document.querySelector('#book')?.scrollIntoView({behavior:'smooth'})}
-            className="btn-g">Book a Lesson</button>
+          <button
+            onClick={()=>document.querySelector('#book')?.scrollIntoView({behavior:'smooth'})}
+            className="btn-g">
+            Book a Lesson
+          </button>
         </div>
       </div>
     </section>
@@ -1085,41 +1180,47 @@ function HowItWorks() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BOOKING
+// BOOKING  (embedded Stripe Payment Element flow)
 // ─────────────────────────────────────────────────────────────────────────────
 function Booking() {
-  const [sel,setSel]=useState<Lesson|null>(null)
-  const [later,setLater]=useState(false)
-  const [selDate,setSelDate]=useState<Date|null>(null)
-  const [selTime,setSelTime]=useState<string|null>(null)
-  const [cart,setCart]=useState<CartItem[]>([])
-  const [piInput,setPiInput]=useState('')
-  const [piApplied,setPiApplied]=useState(false)
-  const [piErr,setPiErr]=useState('')
-  const [form,setForm]=useState<BForm>({name:'',email:'',phone:'',message:''})
-  const [fErr,setFErr]=useState('')
-  const [done,setDone]=useState(false)
-  const [dates,setDates]=useState<Date[]>([])
-  const [bookedSlots,setBookedSlots]=useState<string[]>([])
-  const [loadingSlots,setLoadingSlots]=useState(false)
+  // ── Cart / selection state ─────────────────────────────────────────────────
+  const [sel,setSel]               = useState<Lesson|null>(null)
+  const [later,setLater]           = useState(false)
+  const [selDate,setSelDate]       = useState<Date|null>(null)
+  const [selTime,setSelTime]       = useState<string|null>(null)
+  const [cart,setCart]             = useState<CartItem[]>([])
+  const [piInput,setPiInput]       = useState('')
+  const [piApplied,setPiApplied]   = useState(false)
+  const [piErr,setPiErr]           = useState('')
+  const [form,setForm]             = useState<BForm>({name:'',email:'',phone:'',message:''})
+  const [fErr,setFErr]             = useState('')
+  const [done,setDone]             = useState(false)
+  const [dates,setDates]           = useState<Date[]>([])
+  const [bookedSlots,setBookedSlots] = useState<string[]>([])
+  const [loadingSlots,setLoadingSlots] = useState(false)
+
+  // ── Payment intent state ───────────────────────────────────────────────────
+  const [bookingStep,setBookingStep] = useState<'build'|'payment'>('build')
+  const [clientSecret,setClientSecret] = useState<string|null>(null)
+  const [loadingPI,setLoadingPI]   = useState(false)
+  const [piCreateErr,setPiCreateErr] = useState('')
 
   useEffect(()=>{setDates(getDates())},[])
 
   const fmtD=(d:Date)=>d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})
 
-  async function fetchAvailability(dateStr: string) {
+  async function fetchAvailability(dateStr:string) {
     setLoadingSlots(true)
     try {
-      const { data, error } = await supabasePublic
+      const {data,error}=await supabasePublic
         .from('bookings')
         .select('booked_time')
-        .eq('booked_date', dateStr)
-        .in('status', ['pending', 'confirmed'])
-      if (error) throw error
-      const taken = (data ?? []).map((r: any) => r.booked_time).filter(Boolean)
-      setBookedSlots(taken)
-    } catch (err) {
-      console.error('fetchAvailability error:', err)
+        .eq('booked_date',dateStr)
+        .in('status',['pending','confirmed'])
+      if(error)throw error
+      setBookedSlots((data??[]).map((r:any)=>r.booked_time).filter(Boolean))
+    } catch(err){
+      console.error('fetchAvailability error:',err)
       setBookedSlots([])
     } finally {
       setLoadingSlots(false)
@@ -1128,8 +1229,7 @@ function Booking() {
 
   useEffect(()=>{
     if(!selDate)return
-    const dateStr=fmtD(selDate)
-    fetchAvailability(dateStr)
+    fetchAvailability(fmtD(selDate))
     setSelTime(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[selDate])
@@ -1153,66 +1253,56 @@ function Booking() {
 
   const applyPromo=()=>{
     if(piInput.trim().toUpperCase()===PROMO){setPiApplied(true);setPiErr('')}
-    else setPiErr('Invalid code — try FOUNDING')
+    else setPiErr('Invalid code \u2014 try FOUNDING')
   }
 
-  const sub=cart.reduce((s,c)=>s+c.lesson.price.min*c.quantity,0)
-  const hasEl=cart.some(c=>c.lesson.promoEligible)
-  const disc=piApplied&&hasEl
+  const sub  = cart.reduce((s,c)=>s+c.lesson.price.min*c.quantity,0)
+  const hasEl = cart.some(c=>c.lesson.promoEligible)
+  const disc  = piApplied&&hasEl
     ?cart.filter(c=>c.lesson.promoEligible).reduce((s,c)=>s+c.lesson.price.min*c.quantity*PROMO_PCT,0)
     :0
-  const total=sub-disc
+  const total = sub-disc
 
-  const checkout=async()=>{
+  // ── Create PaymentIntent and transition to payment step ───────────────────
+  const proceedToPayment=async()=>{
     if(!form.name||!form.email){setFErr('Name and email are required.');return}
     setFErr('')
-
-    const bookedDateStr = selDate ? fmtD(selDate) : null
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: cart.map(c => ({
-          name: c.lesson.title,
-          description: c.lesson.description,
-          price: c.lesson.price.min,
-          quantity: c.quantity,
-        })),
-        customerEmail: form.email,
-        customerName: form.name,
-        promoCode: piApplied ? PROMO : undefined,
-        bookedDate: bookedDateStr,
-        bookedTime: selTime,
-      }),
-    })
-    if (!res.ok) {
-      const err = await res.json()
-      setFErr(err.error || 'Checkout failed. Please try again.')
-      return
+    setLoadingPI(true)
+    setPiCreateErr('')
+    try {
+      const res=await fetch('/api/create-payment-intent',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          items:cart.map(c=>({
+            lessonId:c.lesson.id,
+            name:c.lesson.title,
+            quantity:c.quantity,
+            date:c.date||null,
+            time:c.time||null,
+          })),
+          customerEmail:form.email,
+          customerName:form.name,
+          promoCode:piApplied?PROMO:undefined,
+        }),
+      })
+      if(!res.ok){
+        const err=await res.json()
+        setPiCreateErr(err.error||'Could not set up payment. Please try again.')
+        return
+      }
+      const {clientSecret:cs}=await res.json()
+      setClientSecret(cs)
+      setBookingStep('payment')
+      setTimeout(()=>document.querySelector('#book')?.scrollIntoView({behavior:'smooth'}),80)
+    } catch {
+      setPiCreateErr('Something went wrong. Please try again.')
+    } finally {
+      setLoadingPI(false)
     }
-    const { url } = await res.json()
-    window.location.href = url
   }
 
-  if(done) return (
-    <section id="book" className="sec" style={{background:'var(--bg2)',textAlign:'center'}}>
-      <div style={{maxWidth:480,margin:'0 auto',padding:'40px 0'}}>
-        <div style={{fontSize:52,marginBottom:28}}>⛳</div>
-        <h2 className="hdg" style={{marginBottom:18}}>You're In.</h2>
-        <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',lineHeight:1.7}}>
-          Booking confirmed. Check your email — I'll be in touch to lock in the details.
-        </p>
-      </div>
-    </section>
-  )
-
-  const IS:React.CSSProperties={
-    width:'100%',padding:'13px 16px',background:'var(--bgc)',
-    border:'1px solid var(--bd)',color:'var(--t1)',fontFamily:"'DM Sans',sans-serif",
-    fontSize:14,outline:'none',transition:'border-color .2s',
-  }
-
-  // Step label with circle number
+  // ── Shared helper — step label ────────────────────────────────────────────
   const SL=(n:string,txt:string)=>(
     <div style={{marginBottom:24,display:'flex',alignItems:'center',gap:14}}>
       <div style={{
@@ -1227,32 +1317,174 @@ function Booking() {
     </div>
   )
 
-  const availCount=ALL_TIMES.length-bookedSlots.length
-  const cartCount=cart.reduce((s,c)=>s+c.quantity,0)
+  const availCount  = ALL_TIMES.length-bookedSlots.length
+  const cartQty     = cart.reduce((s,c)=>s+c.quantity,0)
 
-  // Contextual disabled button label
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIRMATION SCREEN
+  // ═══════════════════════════════════════════════════════════════════════════
+  if(done) return (
+    <section id="book" className="sec" style={{background:'var(--bg2)',textAlign:'center'}}>
+      <div style={{maxWidth:480,margin:'0 auto',padding:'40px 0'}}>
+        <div style={{fontSize:52,marginBottom:28}}>\u26f3</div>
+        <h2 className="hdg" style={{marginBottom:18}}>You\u2019re In.</h2>
+        <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',lineHeight:1.7}}>
+          Booking confirmed. Check your email \u2014 I\u2019ll be in touch to lock in the details.
+        </p>
+      </div>
+    </section>
+  )
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAYMENT STEP  (embedded Stripe Elements)
+  // ═══════════════════════════════════════════════════════════════════════════
+  if(bookingStep==='payment'&&clientSecret) return (
+    <section id="book" className="sec" style={{background:'var(--bg2)'}}>
+      <div className="wrap">
+
+        {/* Back link */}
+        <button
+          onClick={()=>{setBookingStep('build');setClientSecret(null)}}
+          style={{
+            background:'none',border:'none',cursor:'pointer',marginBottom:36,padding:0,
+            display:'flex',alignItems:'center',gap:8,
+            fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+            letterSpacing:'.14em',textTransform:'uppercase',color:'var(--t3)',
+            transition:'color .2s',
+          }}
+          onMouseEnter={e=>(e.currentTarget.style.color='var(--t1)')}
+          onMouseLeave={e=>(e.currentTarget.style.color='var(--t3)')}
+        >
+          \u2190 Edit Cart
+        </button>
+
+        <div style={{marginBottom:48}}>
+          <div className="lbl" style={{marginBottom:18}}>Secure Checkout</div>
+          <h2 className="hdg" style={{fontSize:'clamp(38px,5vw,64px)'}}>
+            Complete Your<br/><em>Booking.</em>
+          </h2>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:48}}>
+
+          {/* Left: Order summary */}
+          <div>
+            {SL('05','Order Summary')}
+
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:12}}>
+              {cart.map(item=>(
+                <div key={item.lesson.id} style={{
+                  padding:'16px 20px',background:'var(--bgc)',border:'1px solid var(--bd)',
+                }}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                    <div>
+                      <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,
+                        color:'var(--t1)',marginBottom:5}}>{item.lesson.title}</div>
+                      {item.quantity>1&&(
+                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                          color:'var(--t3)',letterSpacing:'.1em',marginBottom:4}}>
+                          \u00d7{item.quantity}
+                        </div>
+                      )}
+                      {item.date?(
+                        <div className="lbl" style={{fontSize:9,color:'var(--o5)'}}>
+                          {item.date}{item.time&&` \u00b7 ${item.time}`}
+                        </div>
+                      ):(
+                        <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>
+                          Scheduling via email
+                        </div>
+                      )}
+                    </div>
+                    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,
+                      fontWeight:300,color:'var(--t1)',lineHeight:1,marginLeft:12}}>
+                      ${(item.lesson.price.min*item.quantity).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Totals */}
+            <div style={{padding:'16px 20px',background:'var(--bgc)',border:'1px solid var(--bd)'}}>
+              {disc>0&&(
+                <div style={{display:'flex',justifyContent:'space-between',
+                  padding:'4px 0 10px',marginBottom:10,borderBottom:'1px solid rgba(255,255,255,.04)'}}>
+                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--g4)'}}>
+                    20% Founding Discount
+                  </span>
+                  <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:18,color:'var(--g4)'}}>
+                    -${disc.toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:15,fontWeight:600,color:'var(--t2)'}}>
+                  Total
+                </span>
+                <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:36,fontWeight:300,color:'var(--t1)'}}>
+                  ${total.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Customer info recap */}
+            <div style={{marginTop:16,padding:'14px 20px',background:'rgba(197,152,62,.04)',
+              border:'1px solid var(--ba)'}}>
+              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.12em',
+                textTransform:'uppercase',color:'var(--t4)',marginBottom:4}}>Booking for</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t1)',lineHeight:1.6}}>
+                {form.name}
+                <span style={{color:'var(--t3)',marginLeft:6}}>{form.email}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Payment Element */}
+          <div>
+            {SL('06','Payment')}
+            <Elements stripe={stripePromise} options={{clientSecret,appearance:stripeAppearance}}>
+              <PaymentForm
+                total={total}
+                customerName={form.name}
+                customerEmail={form.email}
+                onSuccess={()=>setDone(true)}
+                onBack={()=>{setBookingStep('build');setClientSecret(null)}}
+              />
+            </Elements>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD STEP  (lesson selection + scheduling + cart + contact)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const IS:React.CSSProperties={
+    width:'100%',padding:'13px 16px',background:'var(--bgc)',
+    border:'1px solid var(--bd)',color:'var(--t1)',fontFamily:"'DM Sans',sans-serif",
+    fontSize:14,outline:'none',transition:'border-color .2s',
+  }
+
   const addBtnLabel=canAdd
     ?'Add to Cart'
-    :!selDate
-      ?'Choose a Date First'
-      :'Choose a Time to Continue'
+    :!selDate?'Choose a Date First':'Choose a Time to Continue'
 
   return (
     <section id="book" className="sec" style={{background:'var(--bg2)'}}>
       <div className="wrap">
-        {/* Header */}
         <div style={{marginBottom:56}}>
           <div className="lbl" style={{marginBottom:18}}>Book a Lesson</div>
-          <h2 className="hdg">Let's Build Your<br/><em>Game.</em></h2>
+          <h2 className="hdg">Let\u2019s Build Your<br/><em>Game.</em></h2>
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(310px,1fr))',gap:56}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(310px,1fr))',gap:64}}>
 
-          {/* ── LEFT COLUMN ── */}
+          {/* ── LEFT: Lesson + Schedule ── */}
           <div>
             {SL('01','Choose a Lesson')}
 
-            {/* Lesson list */}
             <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:sel?40:0}}>
               {LESSONS.map(l=>{
                 const isSelected=sel?.id===l.id
@@ -1286,8 +1518,8 @@ function Booking() {
                         color:isSelected?'var(--o3)':'var(--t1)',lineHeight:1,transition:'color .2s'}}>
                         ${l.price.min}
                       </div>
-                      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:'var(--t3)',
-                        marginTop:3,textDecoration:'line-through',opacity:.55}}>
+                      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,
+                        color:'var(--t4)',textDecoration:'line-through',marginTop:3}}>
                         ${l.price.max}
                       </div>
                     </div>
@@ -1296,13 +1528,11 @@ function Booking() {
               })}
             </div>
 
-            {/* Step 2 — Date & Time (only when lesson selected) */}
             {sel&&(
               <div style={{animation:'kpFU .4s ease-out forwards'}}>
                 <div style={{borderTop:'1px solid var(--bd)',paddingTop:36,marginTop:8}}>
                   {SL('02','Schedule')}
 
-                  {/* Schedule later checkbox */}
                   <label style={{
                     display:'flex',alignItems:'flex-start',gap:12,cursor:'pointer',
                     marginBottom:28,fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t2)',
@@ -1320,15 +1550,14 @@ function Booking() {
                       <div style={{color:'var(--t1)',fontWeight:500,fontSize:14,marginBottom:4}}>
                         Schedule after purchase
                       </div>
-                      <div style={{fontSize:12,color:'var(--t3)',lineHeight:1.55}}>
-                        Skip the calendar for now — KP will follow up by email to confirm your time.
+                      <div style={{fontSize:13,color:'var(--t3)',lineHeight:1.55}}>
+                        Pay now and coordinate timing later \u2014 KP will follow up by email within 24 hours.
                       </div>
                     </div>
                   </label>
 
                   {!later&&(
                     <>
-                      {/* Date strip */}
                       <div className="lbl" style={{fontSize:9,color:'var(--t3)',marginBottom:10}}>Select Date</div>
                       <div className="ns" style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:8,marginBottom:24}}>
                         {dates.map((date,i)=>{
@@ -1355,18 +1584,14 @@ function Booking() {
                         })}
                       </div>
 
-                      {/* Loading */}
                       {selDate&&loadingSlots&&(
                         <div style={{display:'flex',justifyContent:'center',padding:24}}>
-                          <div style={{
-                            width:20,height:20,borderRadius:'50%',
+                          <div style={{width:20,height:20,borderRadius:'50%',
                             border:'2px solid var(--bd)',borderTopColor:'var(--o5)',
-                            animation:'kpSpin .7s linear infinite',
-                          }}/>
+                            animation:'kpSpin .7s linear infinite'}}/>
                         </div>
                       )}
 
-                      {/* Time grid */}
                       {selDate&&!loadingSlots&&(
                         <>
                           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
@@ -1376,10 +1601,8 @@ function Booking() {
                               {availCount} slot{availCount!==1?'s':''} open
                             </div>
                           </div>
-                          <div style={{
-                            display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(94px,1fr))',
-                            gap:7,marginBottom:24,
-                          }}>
+                          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(94px,1fr))',
+                            gap:7,marginBottom:24}}>
                             {ALL_TIMES.map(time=>{
                               const isBooked=bookedSlots.includes(time)
                               const isSelected=selTime===time
@@ -1403,7 +1626,6 @@ function Booking() {
                     </>
                   )}
 
-                  {/* Add to cart */}
                   <button onClick={addItem} className="btn-g" disabled={!canAdd}
                     style={{width:'100%',justifyContent:'center',marginTop:8}}>
                     {addBtnLabel}
@@ -1411,7 +1633,7 @@ function Booking() {
                   {!canAdd&&!later&&(
                     <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t3)',
                       textAlign:'center',marginTop:10,letterSpacing:'.1em'}}>
-                      Or check <em style={{fontStyle:'normal',color:'var(--o7)'}}>Schedule after purchase</em> above to skip
+                      Or tick <em style={{fontStyle:'normal',color:'var(--o7)'}}>Schedule after purchase</em> above to skip
                     </div>
                   )}
                 </div>
@@ -1419,40 +1641,40 @@ function Booking() {
             )}
           </div>
 
-          {/* ── RIGHT COLUMN ── */}
+          {/* ── RIGHT: Cart + Contact + Proceed ── */}
           <div>
-            {SL('03','Review Your Booking')}
+            {SL('03',cartQty>0?`Review Your Booking (${cartQty})`:'Review Your Booking')}
 
-            {/* Empty state */}
+            {/* Empty cart guided state */}
             {cart.length===0?(
               <div style={{
-                padding:'44px 28px',textAlign:'center',
+                padding:'48px 32px',textAlign:'center',
                 background:'var(--bgc)',border:'1px dashed rgba(255,255,255,.07)',
-                display:'flex',flexDirection:'column',alignItems:'center',gap:16,
+                display:'flex',flexDirection:'column',alignItems:'center',gap:20,
               }}>
-                <div style={{fontSize:30,opacity:.3}}>⛳</div>
-                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,
-                  color:'var(--t1)',fontStyle:'italic',lineHeight:1.2}}>
-                  Your booking is empty
-                </div>
-                <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:260,textAlign:'left',
-                  marginTop:4,borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:16,width:'100%'}}>
-                  {[
-                    'Choose a lesson on the left',
-                    'Pick a date & time — or schedule later',
-                    'Add it to cart to continue',
-                  ].map((step,i)=>(
-                    <div key={i} style={{display:'flex',gap:12,alignItems:'flex-start'}}>
-                      <span style={{
-                        fontFamily:"'JetBrains Mono',monospace",fontSize:9,
-                        color:'var(--o7)',flexShrink:0,marginTop:1,
-                      }}>{String(i+1).padStart(2,'0')}</span>
-                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
-                        letterSpacing:'.12em',textTransform:'uppercase',color:'var(--t3)',lineHeight:1.5}}>
-                        {step}
-                      </span>
-                    </div>
-                  ))}
+                <div style={{fontSize:28,opacity:.28}}>\u26f3</div>
+                <div>
+                  <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:21,
+                    color:'var(--t2)',fontStyle:'italic',lineHeight:1.2,marginBottom:18}}>
+                    Nothing added yet.
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:10,
+                    textAlign:'left',maxWidth:264,margin:'0 auto'}}>
+                    {[
+                      'Choose a lesson on the left',
+                      'Pick a date & time \u2014 or schedule after purchase',
+                      'Add to cart, then check out securely',
+                    ].map((step,i)=>(
+                      <div key={i} style={{display:'flex',gap:12,alignItems:'flex-start'}}>
+                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
+                          color:'var(--o7)',flexShrink:0,lineHeight:1.7,letterSpacing:'.06em'}}>
+                          {i+1}.
+                        </span>
+                        <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,
+                          color:'var(--t3)',lineHeight:1.6}}>{step}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ):(
@@ -1460,16 +1682,14 @@ function Booking() {
                 {cart.map(item=>(
                   <div key={item.lesson.id} style={{
                     padding:'18px 20px',background:'var(--bgc)',border:'1px solid var(--bd)',
-                    transition:'border-color .2s',
                   }}>
-                    {/* Item header */}
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
                       <div>
                         <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:14,
                           color:'var(--t1)',marginBottom:5}}>{item.lesson.title}</div>
                         {item.date?(
                           <div className="lbl" style={{fontSize:9,color:'var(--o5)'}}>
-                            {item.date}{item.time&&` · ${item.time}`}
+                            {item.date}{item.time&&` \u00b7 ${item.time}`}
                           </div>
                         ):(
                           <div className="lbl" style={{fontSize:9,color:'var(--t3)'}}>
@@ -1480,22 +1700,20 @@ function Booking() {
                       <button
                         onClick={()=>rmItem(item.lesson.id)}
                         aria-label={`Remove ${item.lesson.title}`}
-                        style={{
-                          background:'none',border:'none',cursor:'pointer',color:'var(--t4)',
-                          fontSize:20,lineHeight:1,padding:'0 4px',transition:'color .2s',marginLeft:12,
-                        }}
+                        style={{background:'none',border:'none',cursor:'pointer',color:'var(--t4)',
+                          fontSize:20,lineHeight:1,padding:'0 4px',transition:'color .2s',marginLeft:12}}
                         onMouseEnter={e=>(e.currentTarget.style.color='var(--t1)')}
-                        onMouseLeave={e=>(e.currentTarget.style.color='var(--t4)')}>×</button>
+                        onMouseLeave={e=>(e.currentTarget.style.color='var(--t4)')}>
+                        \u00d7
+                      </button>
                     </div>
-
-                    {/* Qty + Price */}
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
                       borderTop:'1px solid rgba(255,255,255,.04)',paddingTop:12}}>
                       <div style={{display:'flex',alignItems:'center',gap:4}}>
                         <button className="qty-btn" onClick={()=>qty(item.lesson.id,-1)}
                           aria-label="Decrease quantity"
                           style={{background:'rgba(255,255,255,.04)',border:'1px solid var(--bd)',
-                            color:'var(--t1)',borderRadius:2}}>−</button>
+                            color:'var(--t1)',borderRadius:2}}>\u2212</button>
                         <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,
                           minWidth:28,textAlign:'center'}}>{item.quantity}</span>
                         <button className="qty-btn" onClick={()=>qty(item.lesson.id,1)}
@@ -1503,8 +1721,7 @@ function Booking() {
                           style={{background:'rgba(255,255,255,.04)',border:'1px solid var(--bd)',
                             color:'var(--t1)',borderRadius:2}}>+</button>
                       </div>
-                      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,
-                        fontWeight:300,color:'var(--t1)'}}>
+                      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,fontWeight:300,color:'var(--t1)'}}>
                         ${(item.lesson.price.min*item.quantity).toFixed(2)}
                       </div>
                     </div>
@@ -1529,7 +1746,8 @@ function Booking() {
                       onFocus={e=>(e.target.style.borderColor='var(--o7)')}
                       onBlur={e=>(e.target.style.borderColor='var(--bd)')}
                     />
-                    <button onClick={applyPromo} className="btn-w" style={{padding:'10px 18px',fontSize:11,flexShrink:0}}>
+                    <button onClick={applyPromo} className="btn-w"
+                      style={{padding:'10px 18px',fontSize:11,flexShrink:0}}>
                       Apply
                     </button>
                   </div>
@@ -1539,18 +1757,18 @@ function Booking() {
                     </div>
                   )}
                   {piApplied&&(
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:'var(--g4)',marginTop:7,
-                      display:'flex',alignItems:'center',gap:6}}>
-                      <span>✓</span> 20% founding member discount applied to packs
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:'var(--g4)',
+                      marginTop:7,display:'flex',alignItems:'center',gap:6}}>
+                      <span>\u2713</span> 20% founding member discount applied to packs
                     </div>
                   )}
                 </div>
 
                 {/* Order summary */}
-                <div style={{marginTop:12,padding:'20px 20px',background:'var(--bgc)',border:'1px solid var(--bd)'}}>
+                <div style={{marginTop:12,padding:'20px',background:'var(--bgc)',border:'1px solid var(--bd)'}}>
                   {([
                     {lbl:'Subtotal',val:`$${sub.toFixed(2)}`,disc:false,big:false},
-                    ...(disc>0?[{lbl:`20% Founding Discount`,val:`-$${disc.toFixed(2)}`,disc:true,big:false}]:[]),
+                    ...(disc>0?[{lbl:'20% Founding Discount',val:`-$${disc.toFixed(2)}`,disc:true,big:false}]:[]),
                     {lbl:'Total',val:`$${total.toFixed(2)}`,disc:false,big:true},
                   ] as {lbl:string;val:string;disc:boolean;big:boolean}[]).map((row)=>(
                     <div key={row.lbl} style={{
@@ -1559,36 +1777,32 @@ function Booking() {
                       borderTop:row.big?'1px solid var(--bd)':'none',
                       marginTop:row.big?10:0,
                     }}>
-                      <span style={{
-                        fontFamily:"'DM Sans',sans-serif",
+                      <span style={{fontFamily:"'DM Sans',sans-serif",
                         fontSize:row.big?15:13,fontWeight:row.big?600:400,
-                        color:row.disc?'var(--g4)':'var(--t2)',
-                      }}>{row.lbl}</span>
-                      <span style={{
-                        fontFamily:"'Cormorant Garamond',serif",
+                        color:row.disc?'var(--g4)':'var(--t2)'}}>{row.lbl}</span>
+                      <span style={{fontFamily:"'Cormorant Garamond',serif",
                         fontSize:row.big?30:20,fontWeight:300,
-                        color:row.disc?'var(--g4)':'var(--t1)',
-                      }}>{row.val}</span>
+                        color:row.disc?'var(--g4)':'var(--t1)'}}>{row.val}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Contact details */}
+                {/* Contact info */}
                 <div style={{marginTop:36}}>
                   <div style={{borderTop:'1px solid var(--bd)',paddingTop:28,marginBottom:24}}>
                     {SL('04','Your Info')}
                   </div>
                   <div style={{display:'flex',flexDirection:'column',gap:14}}>
                     {[
-                      {k:'name',lbl:'Full Name *',ph:'John Smith',t:'text'},
-                      {k:'email',lbl:'Email Address *',ph:'john@example.com',t:'email'},
-                      {k:'phone',lbl:'Phone Number',ph:'(609) 555-0123',t:'tel'},
+                      {k:'name', lbl:'Full Name *',     ph:'John Smith',        t:'text'},
+                      {k:'email',lbl:'Email Address *', ph:'john@example.com',  t:'email'},
+                      {k:'phone',lbl:'Phone Number',    ph:'(609) 555-0123',    t:'tel'},
                     ].map(f=>(
                       <div key={f.k}>
-                        <div style={{
-                          fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-                          textTransform:'uppercase',color:'var(--t3)',display:'block',marginBottom:8,
-                        }}>{f.lbl}</div>
+                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
+                          textTransform:'uppercase',color:'var(--t3)',display:'block',marginBottom:8}}>
+                          {f.lbl}
+                        </div>
                         <input
                           type={f.t}
                           placeholder={f.ph}
@@ -1606,7 +1820,7 @@ function Booking() {
                         Message (optional)
                       </div>
                       <textarea
-                        placeholder="Anything I should know before our first session? Goals, experience level, injuries…"
+                        placeholder="Anything I should know before our first session? Goals, experience level, injuries\u2026"
                         rows={3}
                         value={form.message}
                         onChange={e=>setForm({...form,message:e.target.value})}
@@ -1622,11 +1836,23 @@ function Booking() {
                       {fErr}
                     </div>
                   )}
+                  {piCreateErr&&(
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'#e07070',marginTop:12}}>
+                      {piCreateErr}
+                    </div>
+                  )}
 
-                  <button onClick={checkout} className="btn-g" style={{
-                    width:'100%',justifyContent:'center',marginTop:20,padding:'17px 24px',fontSize:11,
-                  }}>
-                    Confirm &amp; Pay — ${total.toFixed(2)} →
+                  {/* Proceed to Payment — replaces old Stripe Checkout redirect */}
+                  <button
+                    onClick={proceedToPayment}
+                    disabled={loadingPI}
+                    className="btn-g"
+                    style={{width:'100%',justifyContent:'center',marginTop:20,padding:'17px 24px',fontSize:11}}
+                  >
+                    {loadingPI
+                      ? 'Setting Up Payment\u2026'
+                      : `Proceed to Payment \u2014 $${total.toFixed(2)} \u2192`
+                    }
                   </button>
                   <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t4)',
                     textAlign:'center',marginTop:10,letterSpacing:'.12em'}}>
@@ -1668,9 +1894,7 @@ function FAQ() {
                 cursor:'pointer',textAlign:'left',gap:24,
               }}>
                 <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:400,
-                  color:'var(--t1)',lineHeight:1.25}}>
-                  {f.q}
-                </span>
+                  color:'var(--t1)',lineHeight:1.25}}>{f.q}</span>
                 <span style={{
                   fontSize:22,color:'var(--o5)',flexShrink:0,lineHeight:1,marginTop:2,
                   transform:open===i?'rotate(45deg)':'none',
@@ -1679,10 +1903,8 @@ function FAQ() {
               </button>
               <div className={`acc${open===i?' open':''}`}>
                 <div>
-                  <div style={{
-                    padding:'0 26px 24px',fontFamily:"'DM Sans',sans-serif",
-                    fontSize:15,lineHeight:1.8,color:'var(--t2)',
-                  }}>{f.a}</div>
+                  <div style={{padding:'0 26px 24px',fontFamily:"'DM Sans',sans-serif",
+                    fontSize:15,lineHeight:1.8,color:'var(--t2)'}}>{f.a}</div>
                 </div>
               </div>
             </div>
@@ -1693,7 +1915,7 @@ function FAQ() {
           background:'var(--bgc)',border:'1px solid var(--bd)'}}>
           <div className="lbl" style={{marginBottom:14}}>Still have questions?</div>
           <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',marginBottom:24,lineHeight:1.65}}>
-            Reach out directly — no bots, no wait time.
+            Reach out directly \u2014 no bots, no wait time.
           </p>
           <a href="mailto:kpgolftraining@gmail.com" className="btn-w">Email KP Directly</a>
         </div>
@@ -1714,7 +1936,7 @@ function Footer() {
       padding:'clamp(64px,8vw,96px) clamp(20px,4vw,40px) 32px',
     }}>
       <div className="wrap">
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:48,marginBottom:64}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:52,marginBottom:64}}>
 
           {/* Brand */}
           <div>
@@ -1723,15 +1945,9 @@ function Footer() {
               KP<span style={{color:'var(--o5)'}}>.</span>
             </div>
             <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',
-              lineHeight:1.75,marginBottom:24,maxWidth:240}}>
-              Real golf lessons for real people. South Jersey's most affordable coaching — no judgment, no fluff.
+              lineHeight:1.75,maxWidth:240}}>
+              Affordable, judgment-free golf lessons for South Jersey golfers \u2014 beginner to weekend warrior.
             </p>
-            <div style={{
-              fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.14em',
-              textTransform:'uppercase',color:'var(--t4)',
-            }}>
-              South Jersey, NJ
-            </div>
           </div>
 
           {/* Nav */}
@@ -1739,7 +1955,13 @@ function Footer() {
             <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.16em',
               textTransform:'uppercase',color:'var(--t3)',marginBottom:20}}>Navigation</div>
             <nav style={{display:'flex',flexDirection:'column',gap:12}}>
-              {[['About','#about'],['Swing Videos','#videos'],['Pricing','#pricing'],['Book a Lesson','#book'],['FAQ','#faq']].map(([l,h])=>(
+              {[
+                ['About','#about'],
+                ['Swing Videos','#videos'],
+                ['Pricing','#pricing'],
+                ['Book a Lesson','#book'],
+                ['FAQ','#faq'],
+              ].map(([l,h])=>(
                 <button key={h} onClick={()=>go(h)} style={{
                   fontFamily:"'DM Sans',sans-serif",fontSize:14,color:'var(--t2)',
                   background:'none',border:'none',cursor:'pointer',textAlign:'left',
@@ -1779,7 +2001,7 @@ function Footer() {
                 <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'.12em',
                   textTransform:'uppercase',color:'var(--t4)',marginBottom:6}}>Caddie History</div>
                 <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',lineHeight:1.6}}>
-                  Pine Valley · Tavistock
+                  Pine Valley \u00b7 Tavistock
                 </div>
               </div>
             </div>
@@ -1791,10 +2013,10 @@ function Footer() {
           display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:16}}>
           <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,letterSpacing:'.1em',
             textTransform:'uppercase',color:'var(--t4)'}}>
-            © {yr} KP Golf Training. All rights reserved.
+            \u00a9 {yr} KP Golf Training. All rights reserved.
           </div>
           <div style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:14,color:'var(--t3)'}}>
-            Pine Valley · Tavistock
+            Pine Valley \u00b7 Tavistock
           </div>
         </div>
       </div>
@@ -1808,7 +2030,6 @@ function Footer() {
 export default function Page() {
   const [mounted,setMounted]=useState(false)
   const [entered,setEntered]=useState(false)
-
   useEffect(()=>{setMounted(true)},[])
 
   if(!mounted) return (
