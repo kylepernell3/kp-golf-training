@@ -292,15 +292,15 @@ const LESSONS: Lesson[] = [
   { id:'l90',title:'90-Min Lesson',duration:'90 minutes',price:{min:84.99,max:99.99},type:'single',
     description:'The complete assessment — tee to green. Where real transformation starts.',
     details:['1-on-1 instruction','Complete swing analysis','Short game work','Full practice plan','On-course strategy'] },
-  { id:'pk3',title:'3\u00d745 Starter Pack',duration:'3 sessions \u00b7 45 min each',price:{min:139.99,max:154.99},type:'pack',sessions:3,promoEligible:true,
+  { id:'pk3',title:'3×45 Starter Pack',duration:'3 sessions \u00b7 45 min each',price:{min:139.99,max:154.99},type:'pack',sessions:3,promoEligible:true,
     description:'Three focused sessions to build real momentum and see results on the course.',
-    details:['3 \u00d7 45-min sessions','Progress tracking','Custom drill library','Between-session tips'] },
-  { id:'pk5',title:'5\u00d760 Break-90 Pack',duration:'5 sessions \u00b7 60 min each',price:{min:264.99,max:304.99},type:'pack',sessions:5,bestValue:true,promoEligible:true,
+    details:['3 × 45-min sessions','Progress tracking','Custom drill library','Between-session tips'] },
+  { id:'pk5',title:'5×60 Break-90 Pack',duration:'5 sessions \u00b7 60 min each',price:{min:264.99,max:304.99},type:'pack',sessions:5,bestValue:true,promoEligible:true,
     description:'Built for golfers serious about breaking 90. A full game transformation over five sessions.',
-    details:['5 \u00d7 60-min sessions','Full swing overhaul','Short game focus','Course management','Handicap goal plan'] },
-  { id:'pkj',title:'4\u00d745 Junior Pack',duration:'4 sessions \u00b7 45 min each',price:{min:164.99,max:184.99},type:'pack',sessions:4,promoEligible:true,
+    details:['5 × 60-min sessions','Full swing overhaul','Short game focus','Course management','Handicap goal plan'] },
+  { id:'pkj',title:'4×45 Junior Pack',duration:'4 sessions \u00b7 45 min each',price:{min:164.99,max:184.99},type:'pack',sessions:4,promoEligible:true,
     description:'For young golfers ages 6\u201317. Fun, patient, and built for long-term athletic development.',
-    details:['4 \u00d7 45-min sessions','Age-appropriate drills','Fun fundamentals','Parent updates after each session'] },
+    details:['4 × 45-min sessions','Age-appropriate drills','Fun fundamentals','Parent updates after each session'] },
 ]
 
 const MARQUEE_W = [
@@ -317,30 +317,30 @@ function getDates(): Date[] {
 
 const FAQS=[
   { q:'Are you PGA certified?',
-    a:"No \u2014 and that\u2019s kind of the point. I\u2019m not a textbook instructor with a laminated card. I learned golf from the ground up, caddied at two of the most prestigious courses in the world \u2014 Tavistock and Pine Valley \u2014 and spent years figuring out what actually fixes a real golfer\u2019s game. No jargon. No $300/hr ego. Just honest feedback that shows up on your scorecard." },
+    a:"No — and that's kind of the point. I'm not a textbook instructor with a laminated card. I learned golf from the ground up, caddied at two of the most prestigious courses in the world — Tavistock and Pine Valley — and spent years figuring out what actually fixes a real golfer's game. No jargon. No $300/hr ego. Just honest feedback that shows up on your scorecard." },
   { q:'Where are lessons held?',
-    a:"At driving ranges and practice facilities across South Jersey. Once you book, I\u2019ll confirm a convenient spot for you. I keep a few local locations in rotation and recommend the best fit based on what we\u2019re working on." },
+    a:"At driving ranges and practice facilities across South Jersey. Once you book, I'll confirm a convenient spot for you. I keep a few local locations in rotation and recommend the best fit based on what we're working on." },
   { q:'What should I bring?',
-    a:"Your clubs, golf shoes or sneakers, and a willingness to try something different. I bring alignment sticks, training aids, and my phone for video analysis. No clubs yet? No problem \u2014 I\u2019ll help you figure out what you need." },
+    a:"Your clubs, golf shoes or sneakers, and a willingness to try something different. I bring alignment sticks, training aids, and my phone for video analysis. No clubs yet? No problem — I'll help you figure out what you need." },
   { q:'Can I reschedule or cancel?',
-    a:"Absolutely. Give me at least 24 hours and we\u2019ll sort it out. Pack sessions don\u2019t expire, so no stress if you need to push a session. I\u2019m not a big box golf academy \u2014 I\u2019m flexible because I run this personally." },
+    a:"Absolutely. Give me at least 24 hours and we'll sort it out. Pack sessions don't expire, so no stress if you need to push a session. I'm not a big box golf academy — I'm flexible because I run this personally." },
 ]
 
 const STEPS=[
-  {n:'01',icon:'\u26f3',title:'Choose Your Lesson',desc:'Pick a session length or pack that fits your schedule and goals.'},
+  {n:'01',icon:'⛳',title:'Choose Your Lesson',desc:'Pick a session length or pack that fits your schedule and goals.'},
   {n:'02',icon:'\ud83d\udcc5',title:'Pick a Time',desc:'Select a date and time from available slots. First-timers get priority.'},
   {n:'03',icon:'\ud83d\udd12',title:'Lock It In',desc:'Pay securely online. Your spot is confirmed instantly.'},
-  {n:'04',icon:'\ud83c\udfcc\ufe0f',title:'Show Up & Swing',desc:'Meet at the range. We diagnose, drill, and practice \u2014 no judgment.'},
+  {n:'04',icon:'\ud83c\udfcc\ufe0f',title:'Show Up & Swing',desc:'Meet at the range. We diagnose, drill, and practice — no judgment.'},
   {n:'05',icon:'\ud83d\udccb',title:'Take the Plan Home',desc:'Leave with a custom practice plan so every range session after this one counts.'},
 ]
 
 const PILLARS=[
-  {icon:'\ud83c\udfc6',title:"Lived at the Game\u2019s Highest Level",
-   body:"I caddied at Tavistock and Pine Valley \u2014 two of the most storied courses in the world. That experience gave me an eye for the game that no classroom ever could."},
+  {icon:'\ud83c\udfc6',title:"Lived at the Game's Highest Level",
+   body:"I caddied at Tavistock and Pine Valley — two of the most storied courses in the world. That experience gave me an eye for the game that no classroom ever could."},
   {icon:'\ud83c\udfaf',title:'Real Fixes, Real Fast',
    body:"Skip the theory. I teach simple mechanical cues and targeted drills that show up on the scorecard within a round or two. No jargon, no fluff."},
   {icon:'\ud83d\udc9a',title:'Built for South Jersey Golfers',
-   body:"Weekend warriors, beginners, juniors. My pricing is built for real golfers \u2014 not golf academies. You don\u2019t need a trust fund to play better golf."},
+   body:"Weekend warriors, beginners, juniors. My pricing is built for real golfers — not golf academies. You don't need a trust fund to play better golf."},
 ]
 
 const PROMO='FOUNDING', PROMO_PCT=0.2
@@ -451,8 +451,8 @@ function PaymentForm({ total, customerName, customerEmail, onSuccess, onBack }: 
         style={{width:'100%',justifyContent:'center',marginTop:20,padding:'17px 24px',fontSize:11}}
       >
         {paying
-          ? 'Processing\u2026'
-          : `Confirm & Pay \u2014 $${total.toFixed(2)}`
+          ? 'Processing…'
+          : `Confirm & Pay — $${total.toFixed(2)}`
         }
       </button>
 
@@ -557,7 +557,7 @@ function Navbar() {
       }}>
         <button
           onClick={()=>window.scrollTo({top:0,behavior:'smooth'})}
-          aria-label="KP Golf Training \u2014 scroll to top"
+          aria-label="KP Golf Training — scroll to top"
           style={{
             fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:400,
             color:'#ede8dc',background:'none',border:'none',cursor:'pointer',padding:'4px 0',lineHeight:1,
@@ -697,7 +697,7 @@ function Hero() {
         <div style={{maxWidth:800}}>
           <div className="lbl" style={{marginBottom:30,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
             <span style={{width:36,height:1,background:'#c5983e',display:'inline-block',flexShrink:0}}/>
-            South Jersey Golf Lessons \u2014 Starting at $39.99
+            South Jersey Golf Lessons — Starting at $39.99
           </div>
           <h1 style={{
             fontFamily:"'Cormorant Garamond',serif",
@@ -716,7 +716,7 @@ function Hero() {
           </p>
           <div style={{display:'flex',gap:14,flexWrap:'wrap',marginBottom:68}}>
             <button onClick={()=>go('#book')} className="btn-g">Book a Lesson</button>
-            <button onClick={()=>go('#videos')} className="btn-w">Watch Swing Videos \u2193</button>
+            <button onClick={()=>go('#videos')} className="btn-w">Watch Swing Videos ↓</button>
           </div>
           <div style={{display:'flex',gap:44,flexWrap:'wrap',rowGap:28}}>
             {([
@@ -805,9 +805,9 @@ function WhyKP() {
           <div className="lbl" style={{marginBottom:18}}>Why KP Training</div>
           <h2 className="hdg" style={{marginBottom:26}}>The Bag Tag<br/><em>Means Something.</em></h2>
           <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',lineHeight:1.8,marginBottom:52,maxWidth:480}}>
-            You don\u2019t learn golf at Pine Valley by reading a manual. You learn it by watching the world\u2019s
-            best players navigate every lie, every wind, every pressure putt. That\u2019s the education
-            I\u2019m bringing to South Jersey.
+            You don't learn golf at Pine Valley by reading a manual. You learn it by watching the world's
+            best players navigate every lie, every wind, every pressure putt. That's the education
+            I'm bringing to South Jersey.
           </p>
           <div style={{display:'flex',flexDirection:'column',gap:28}}>
             {PILLARS.map((p,i)=>(
@@ -1063,7 +1063,7 @@ function Pricing() {
           {lesson.details.map((d,i)=>(
             <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',
               fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
-              <span style={{color:'var(--o7)',flexShrink:0,marginTop:2,lineHeight:1.2}}>\u2014</span>
+              <span style={{color:'var(--o7)',flexShrink:0,marginTop:2,lineHeight:1.2}}>—</span>
               <span>{d}</span>
             </div>
           ))}
@@ -1093,7 +1093,7 @@ function Pricing() {
           <span style={{fontSize:18}}>\ud83c\udfaf</span>
           <div>
             <div className="lbl" style={{fontSize:10,marginBottom:5}}>
-              Founding Member Pricing \u2014 Code: <strong style={{color:'var(--o3)'}}>FOUNDING</strong>
+              Founding Member Pricing — Code: <strong style={{color:'var(--o3)'}}>FOUNDING</strong>
             </div>
             <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)'}}>
               Save 20% on all lesson packs. Limited-time founding member rate for early supporters.
@@ -1253,7 +1253,7 @@ function Booking() {
 
   const applyPromo=()=>{
     if(piInput.trim().toUpperCase()===PROMO){setPiApplied(true);setPiErr('')}
-    else setPiErr('Invalid code \u2014 try FOUNDING')
+    else setPiErr('Invalid code — try FOUNDING')
   }
 
   const sub  = cart.reduce((s,c)=>s+c.lesson.price.min*c.quantity,0)
@@ -1326,10 +1326,10 @@ function Booking() {
   if(done) return (
     <section id="book" className="sec" style={{background:'var(--bg2)',textAlign:'center'}}>
       <div style={{maxWidth:480,margin:'0 auto',padding:'40px 0'}}>
-        <div style={{fontSize:52,marginBottom:28}}>\u26f3</div>
-        <h2 className="hdg" style={{marginBottom:18}}>You\u2019re In.</h2>
+        <div style={{fontSize:52,marginBottom:28}}>⛳</div>
+        <h2 className="hdg" style={{marginBottom:18}}>You're In.</h2>
         <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',lineHeight:1.7}}>
-          Booking confirmed. Check your email \u2014 I\u2019ll be in touch to lock in the details.
+          Booking confirmed. Check your email — I'll be in touch to lock in the details.
         </p>
       </div>
     </section>
@@ -1383,7 +1383,7 @@ function Booking() {
                       {item.quantity>1&&(
                         <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,
                           color:'var(--t3)',letterSpacing:'.1em',marginBottom:4}}>
-                          \u00d7{item.quantity}
+                          ×{item.quantity}
                         </div>
                       )}
                       {item.date?(
@@ -1476,7 +1476,7 @@ function Booking() {
       <div className="wrap">
         <div style={{marginBottom:56}}>
           <div className="lbl" style={{marginBottom:18}}>Book a Lesson</div>
-          <h2 className="hdg">Let\u2019s Build Your<br/><em>Game.</em></h2>
+          <h2 className="hdg">Let's Build Your<br/><em>Game.</em></h2>
         </div>
 
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(310px,1fr))',gap:64}}>
@@ -1551,7 +1551,7 @@ function Booking() {
                         Schedule after purchase
                       </div>
                       <div style={{fontSize:13,color:'var(--t3)',lineHeight:1.55}}>
-                        Pay now and coordinate timing later \u2014 KP will follow up by email within 24 hours.
+                        Pay now and coordinate timing later — KP will follow up by email within 24 hours.
                       </div>
                     </div>
                   </label>
@@ -1652,7 +1652,7 @@ function Booking() {
                 background:'var(--bgc)',border:'1px dashed rgba(255,255,255,.07)',
                 display:'flex',flexDirection:'column',alignItems:'center',gap:20,
               }}>
-                <div style={{fontSize:28,opacity:.28}}>\u26f3</div>
+                <div style={{fontSize:28,opacity:.28}}>⛳</div>
                 <div>
                   <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:21,
                     color:'var(--t2)',fontStyle:'italic',lineHeight:1.2,marginBottom:18}}>
@@ -1662,7 +1662,7 @@ function Booking() {
                     textAlign:'left',maxWidth:264,margin:'0 auto'}}>
                     {[
                       'Choose a lesson on the left',
-                      'Pick a date & time \u2014 or schedule after purchase',
+                      'Pick a date & time — or schedule after purchase',
                       'Add to cart, then check out securely',
                     ].map((step,i)=>(
                       <div key={i} style={{display:'flex',gap:12,alignItems:'flex-start'}}>
@@ -1704,7 +1704,7 @@ function Booking() {
                           fontSize:20,lineHeight:1,padding:'0 4px',transition:'color .2s',marginLeft:12}}
                         onMouseEnter={e=>(e.currentTarget.style.color='var(--t1)')}
                         onMouseLeave={e=>(e.currentTarget.style.color='var(--t4)')}>
-                        \u00d7
+                        ×
                       </button>
                     </div>
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
@@ -1713,7 +1713,7 @@ function Booking() {
                         <button className="qty-btn" onClick={()=>qty(item.lesson.id,-1)}
                           aria-label="Decrease quantity"
                           style={{background:'rgba(255,255,255,.04)',border:'1px solid var(--bd)',
-                            color:'var(--t1)',borderRadius:2}}>\u2212</button>
+                            color:'var(--t1)',borderRadius:2}}>−</button>
                         <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,
                           minWidth:28,textAlign:'center'}}>{item.quantity}</span>
                         <button className="qty-btn" onClick={()=>qty(item.lesson.id,1)}
@@ -1820,7 +1820,7 @@ function Booking() {
                         Message (optional)
                       </div>
                       <textarea
-                        placeholder="Anything I should know before our first session? Goals, experience level, injuries\u2026"
+                        placeholder="Anything I should know before our first session? Goals, experience level, injuries…"
                         rows={3}
                         value={form.message}
                         onChange={e=>setForm({...form,message:e.target.value})}
@@ -1850,8 +1850,8 @@ function Booking() {
                     style={{width:'100%',justifyContent:'center',marginTop:20,padding:'17px 24px',fontSize:11}}
                   >
                     {loadingPI
-                      ? 'Setting Up Payment\u2026'
-                      : `Proceed to Payment \u2014 $${total.toFixed(2)} \u2192`
+                      ? 'Setting Up Payment…'
+                      : `Proceed to Payment — $${total.toFixed(2)} \u2192`
                     }
                   </button>
                   <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:'var(--t4)',
@@ -1915,7 +1915,7 @@ function FAQ() {
           background:'var(--bgc)',border:'1px solid var(--bd)'}}>
           <div className="lbl" style={{marginBottom:14}}>Still have questions?</div>
           <p style={{fontFamily:"'DM Sans',sans-serif",color:'var(--t2)',marginBottom:24,lineHeight:1.65}}>
-            Reach out directly \u2014 no bots, no wait time.
+            Reach out directly — no bots, no wait time.
           </p>
           <a href="mailto:kpgolftraining@gmail.com" className="btn-w">Email KP Directly</a>
         </div>
@@ -1946,7 +1946,7 @@ function Footer() {
             </div>
             <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:'var(--t2)',
               lineHeight:1.75,maxWidth:240}}>
-              Affordable, judgment-free golf lessons for South Jersey golfers \u2014 beginner to weekend warrior.
+              Affordable, judgment-free golf lessons for South Jersey golfers — beginner to weekend warrior.
             </p>
           </div>
 
