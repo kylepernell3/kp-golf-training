@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
   }
 
   let event: Stripe.Event;
-
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -80,15 +79,15 @@ export async function POST(req: NextRequest) {
 
         // 2. Pull metadata stored at checkout time
         const meta = session.metadata ?? {};
-        const customerName  = meta.customerName  ?? '';
-        const bookedDate    = meta.bookedDate    ?? '';
-        const bookedTime    = meta.bookedTime    ?? '';
-        const promoCode     = meta.promoCode     ?? '';
+        const customerName = meta.customerName ?? '';
+        const bookedDate = meta.bookedDate ?? '';
+        const bookedTime = meta.bookedTime ?? '';
+        const promoCode = meta.promoCode ?? '';
         const customerEmail = session.customer_email ?? '';
 
         // 3. Pull lesson name + amount from Stripe line items
-        let lessonName  = '';
-        let amountPaid  = '0.00';
+        let lessonName = '';
+        let amountPaid = '0.00';
         try {
           const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5 });
           if (lineItems.data.length > 0) {
@@ -111,13 +110,50 @@ export async function POST(req: NextRequest) {
           amountPaid,
           stripeSessionId: session.id,
         });
-
         break;
       }
 
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('PaymentIntent succeeded:', paymentIntent.id);
+
+        // Extract metadata stored when creating the payment intent
+        const meta = paymentIntent.metadata ?? {};
+        const customerName = meta.customerName ?? '';
+        const customerEmail = meta.customerEmail ?? '';
+        const bookedDate = meta.bookedDate ?? '';
+        const bookedTime = meta.bookedTime ?? '';
+        const promoCode = meta.promoCode ?? '';
+
+        // Parse items to get lesson name
+        let lessonName = '';
+        try {
+          const items = JSON.parse(meta.items ?? '[]');
+          lessonName = items.map((i: any) => i.title).join(', ');
+        } catch {
+          lessonName = '';
+        }
+
+        const amountPaid = ((paymentIntent.amount_received ?? paymentIntent.amount) / 100).toFixed(2);
+
+        // Update Supabase booking status if stripe_session_id was stored
+        // (payment intent ID used as fallback session ID)
+        await supabase
+          .from('bookings')
+          .update({ status: 'paid' })
+          .eq('stripe_session_id', paymentIntent.id);
+
+        // Fire to GHL
+        await notifyGHL({
+          customerName,
+          customerEmail,
+          bookedDate,
+          bookedTime,
+          promoCode,
+          lessonName,
+          amountPaid,
+          stripeSessionId: paymentIntent.id,
+        });
         break;
       }
 
