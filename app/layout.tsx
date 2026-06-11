@@ -18,29 +18,33 @@ export const metadata: Metadata = {
   title: 'KP Golf Training | Affordable Golf Lessons in South Jersey',
   description:
     'Real-world golf coaching from an experienced caddie at Tavistock & Pine Valley. Affordable 1-on-1 lessons in South Jersey — beginners to mid-handicaps welcome.',
-  keywords: [
-    'golf lessons South Jersey',
-    'affordable golf coaching NJ',
-    'golf instructor Marlton',
-    'beginner golf lessons NJ',
-    'Pine Valley caddie coach',
-    'KP Golf Training',
-  ],
+  icons: {
+    icon: 'https://assets.cdn.filesafe.space/tJprKZVdMbjamSREyAWg/media/6a2accd9983b31ac4a45bd9d.jpeg',
+    apple: 'https://assets.cdn.filesafe.space/tJprKZVdMbjamSREyAWg/media/6a2accd9983b31ac4a45bd9d.jpeg',
+  },
   openGraph: {
     title: 'KP Golf Training | Affordable Golf Lessons in South Jersey',
     description:
-      'Honest, judgment-free golf coaching from someone who\'s spent years looping at Tavistock and Pine Valley. Starting at $39.99.',
+      "Honest, judgment-free golf coaching from someone who's spent years looping at Tavistock and Pine Valley. Starting at $39.99.",
     type: 'website',
     locale: 'en_US',
+    images: [
+      {
+        url: 'https://assets.cdn.filesafe.space/tJprKZVdMbjamSREyAWg/media/6a2accd9983b31ac4a45bd9d.jpeg',
+        width: 1200,
+        height: 630,
+        alt: 'KP Golf Training',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'KP Golf Training',
-    description: 'Affordable golf lessons in South Jersey. Book your first session today.',
-  },
-  robots: {
-    index: true,
-    follow: true,
+    title: 'KP Golf Training | Affordable Golf Lessons in South Jersey',
+    description:
+      "Honest, judgment-free golf coaching from someone who's spent years looping at Tavistock and Pine Valley. Starting at $39.99.",
+    images: [
+      'https://assets.cdn.filesafe.space/tJprKZVdMbjamSREyAWg/media/6a2accd9983b31ac4a45bd9d.jpeg',
+    ],
   },
 }
 
@@ -51,9 +55,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-      <body className="bg-[#0a0f0a] text-white antialiased overflow-x-hidden">
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
