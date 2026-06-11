@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description:
     'Real-world golf coaching from an experienced caddie at Tavistock & Pine Valley. Affordable 1-on-1 lessons in South Jersey — beginners to mid-handicaps welcome.',
   icons: {
-    icon: 'https://assets.cdn.filesafe.space/tJprKZVdMbjamSREyAWg/media/6a2accd9983b31ac4a45bd9d.jpeg',
+        icon: 'https://assets.cdn.filesafe.space/R0DbCDcJdSd6Bd4e4qwT/media/6917e128286c472a0cf05f55.png',
     apple: 'https://assets.cdn.filesafe.space/tJprKZVdMbjamSREyAWg/media/6a2accd9983b31ac4a45bd9d.jpeg',
   },
   openGraph: {
